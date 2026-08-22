@@ -1,0 +1,2467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capstone Preview Generator</title>
+<style>
+  :root {
+    --navy: #14213d;
+    --navy-2: #1f3a5f;
+    --gold: #a9803d;
+    --ink: #1c2430;
+    --ink-soft: #4a5568;
+    --paper: #ffffff;
+    --bg: #f5f6f8;
+    --gray-50: #f7f8fa;
+    --gray-100: #eef0f3;
+    --gray-200: #e2e5ea;
+    --gray-400: #94a0b2;
+    --gray-600: #5b6472;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --serif: Georgia, "Times New Roman", serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app { min-height: 100vh; }
+
+  .app-header {
+    background: var(--navy);
+    color: #fff;
+    padding: 20px 32px;
+  }
+  .app-header h1 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  .app-header p {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    color: #c3ccdb;
+  }
+
+  .app-body {
+    display: grid;
+    grid-template-columns: 440px 1fr;
+    align-items: start;
+  }
+
+  .form-panel {
+    background: var(--gray-50);
+    border-right: 1px solid var(--gray-200);
+    padding: 24px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .preview-panel {
+    padding: 40px 32px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 9px 16px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .btn-primary {
+    background: var(--navy);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--navy-2); }
+  .btn-secondary {
+    background: #fff;
+    color: var(--navy);
+    border-color: var(--gray-200);
+  }
+  .btn-secondary:hover { border-color: var(--navy); }
+  .btn-muted {
+    background: transparent;
+    color: var(--gray-600);
+    border-color: var(--gray-200);
+  }
+  .btn-muted:hover { border-color: #c0392b; color: #c0392b; }
+  .btn-small { padding: 6px 12px; font-size: 0.78rem; }
+
+  .autosave-note {
+    font-size: 0.72rem;
+    color: var(--gray-400);
+    line-height: 1.4;
+    margin: 0 0 16px;
+  }
+
+  .step-progress-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gold);
+  }
+  .step-help {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 6px 0 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .step-questions {
+    font-size: 0.78rem;
+    font-style: italic;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: -10px 0 12px;
+    padding: 8px 10px;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-left: 3px solid var(--navy-2);
+    border-radius: 6px;
+  }
+  .step-owner {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--navy-2);
+    margin: -10px 0 18px;
+    padding: 8px 10px;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-left: 3px solid var(--gold);
+    border-radius: 6px;
+  }
+
+  .wizard-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px solid var(--gray-200);
+  }
+
+  .upload-box { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .upload-label { font-size: 0.8rem; font-weight: 600; color: var(--ink-soft); }
+  .upload-summary {
+    font-size: 0.82rem;
+    line-height: 1.5;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--ink);
+  }
+
+  .btn-help {
+    background: none;
+    border: none;
+    color: var(--navy-2);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 2px 0;
+    margin-top: 6px;
+    display: block;
+  }
+  .help-panel {
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-left: 3px solid var(--gold);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+  .help-panel p { margin: 0 0 8px; }
+  .help-panel p:last-child { margin-bottom: 0; }
+
+  .logo-preview-wrap { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+  .logo-preview-wrap img { max-height: 60px; max-width: 200px; display: block; border: 1px solid var(--gray-200); border-radius: 6px; background: #fff; padding: 4px; }
+
+  .slide-images-preview { margin-top: 10px; }
+  .slide-thumb-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .slide-thumb-item { position: relative; }
+  .slide-thumb-item img { width: 84px; height: 47px; object-fit: cover; display: block; border: 1px solid var(--gray-200); border-radius: 4px; background: #fff; }
+  .slide-thumb-remove {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    width: 18px;
+    height: 18px;
+    line-height: 16px;
+    padding: 0;
+    border-radius: 50%;
+    background: #c0392b;
+    color: #fff;
+    border: 2px solid var(--gray-50);
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  fieldset {
+    border: none;
+    padding: 0;
+    margin: 0 0 22px;
+  }
+  legend {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gold);
+    margin-bottom: 10px;
+    padding: 0;
+  }
+  label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin: 12px 0 5px;
+  }
+  label .hint {
+    font-weight: 400;
+    color: var(--gray-400);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.75rem;
+  }
+  input[type="text"], textarea {
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    padding: 9px 10px;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+    resize: vertical;
+  }
+  input[type="text"]:focus, textarea:focus {
+    outline: none;
+    border-color: var(--navy-2);
+    box-shadow: 0 0 0 3px rgba(31,58,95,0.12);
+  }
+
+  .team-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .team-row label { margin-top: 0; }
+
+  .prompt-block {
+    padding-bottom: 14px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .prompt-block:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .team-member-block {
+    padding-bottom: 14px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .team-member-block:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .preview-page {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--paper);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(20,33,61,0.08), 0 8px 24px rgba(20,33,61,0.06);
+    overflow: hidden;
+  }
+
+  .empty-state {
+    max-width: 560px;
+    margin: 80px auto;
+    text-align: center;
+    color: var(--gray-400);
+  }
+  .empty-state h2 {
+    color: var(--gray-600);
+    font-size: 1.05rem;
+    margin-bottom: 6px;
+  }
+  .empty-state p { font-size: 0.9rem; }
+
+  @media (max-width: 900px) {
+    .app-body { grid-template-columns: 1fr; }
+    .form-panel, .preview-panel {
+      position: static;
+      height: auto;
+      overflow: visible;
+    }
+    .form-panel { border-right: none; border-bottom: 1px solid var(--gray-200); }
+    .preview-panel { padding: 24px 16px; }
+  }
+  @media (max-width: 560px) {
+    .team-row { grid-template-columns: 1fr; gap: 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <h1>Capstone Preview Generator</h1>
+    <p>Turn your capstone project details into a polished one-page preview.</p>
+  </header>
+
+  <div class="app-body">
+    <section class="form-panel">
+      <div class="toolbar">
+        <button type="button" id="btnSaveCloud" class="btn-secondary" title="Save your project to the cloud and get a shareable link — anyone with the link can open it and keep going, no account or file needed.">Save &amp; Get Link</button>
+        <button type="button" id="btnExport" class="btn-primary" title="Download a finished, standalone HTML copy of your preview to share or submit.">Export HTML</button>
+        <button type="button" id="btnClear" class="btn-muted" title="Erase everything in the form and this browser's autosave. Asks you to confirm first.">Clear</button>
+      </div>
+      <p class="autosave-note">Progress autosaves in this browser as a safety net. Click <strong>Save &amp; Get Link</strong> to save to the cloud and get a link — send that link to a teammate and it opens with everything already filled in.</p>
+      <div class="upload-summary" id="shareLinkBox" hidden>
+        <strong>Your link — anyone who opens it can view and continue this project:</strong>
+        <input type="text" id="shareLinkUrl" readonly style="width:100%;margin-top:6px;">
+        <button type="button" id="btnCopyLink" class="btn-secondary btn-small" style="margin-top:6px;">Copy Link</button>
+      </div>
+
+      <p class="step-progress-label" id="stepProgressLabel"></p>
+      <p class="step-help" id="stepHelpText"></p>
+      <p class="step-questions" id="stepQuestionsText" hidden></p>
+      <p class="step-owner" id="stepOwnerText" hidden></p>
+
+      <form id="projectForm" novalidate>
+
+        <div class="wizard-step" data-step="0">
+          <div class="upload-box">
+            <label class="upload-label" for="docUpload">Upload your project brief <span class="hint">(.txt or .md works best)</span></label>
+            <input type="file" id="docUpload" accept=".txt,.md,.markdown,text/plain,text/markdown">
+            <button type="button" id="btnTogglePaste" class="btn-secondary btn-small">Or paste the text instead</button>
+            <div id="pasteArea" hidden style="width:100%;">
+              <label for="docPasteText">Paste your document text</label>
+              <textarea id="docPasteText" rows="8" placeholder="Paste the text of your project brief here..."></textarea>
+              <button type="button" id="btnUsePasted" class="btn-secondary btn-small" style="margin-top:8px;">Use This Text</button>
+            </div>
+            <div id="uploadSummary" class="upload-summary" hidden></div>
+            <button type="button" id="btnSkipUpload" class="btn-muted btn-small">Skip — I'll fill this in myself</button>
+          </div>
+        </div>
+
+        <div class="wizard-step" data-step="1" hidden>
+          <fieldset>
+            <legend title="Your team's identifying number for this cohort.">Team</legend>
+            <label for="teamNumber">Team Number <span class="hint">(e.g., Team 4)</span></label>
+            <input type="text" id="teamNumber" value="">
+          </fieldset>
+
+          <fieldset>
+            <legend title="Who's on the team, their role, and which deliverable step below is theirs.">Team Members</legend>
+
+            <div class="team-member-block">
+              <div class="team-row">
+                <div><label for="teamMember1Name">Name</label><input type="text" id="teamMember1Name" value="" placeholder="Team lead's name"></div>
+                <div><label for="teamMember1Role">Role</label><input type="text" id="teamMember1Role" value="Team Lead / Project Manager"></div>
+                <div><label for="teamMember1Responsibility">Responsibility</label><input type="text" id="teamMember1Responsibility" value="Coordination, deadlines, team meetings, client communication, project integration, final recommendation"></div>
+              </div>
+            </div>
+            <div class="team-member-block">
+              <div class="team-row">
+                <div><label for="teamMember2Name">Name <span class="hint">(owns Step 4 — AI Solution)</span></label><input type="text" id="teamMember2Name" value="" placeholder="This person's name"></div>
+                <div><label for="teamMember2Role">Role</label><input type="text" id="teamMember2Role" value="AI / Prompt & Prototype Lead"></div>
+                <div><label for="teamMember2Responsibility">Responsibility</label><input type="text" id="teamMember2Responsibility" value="Prompt development, prompt iteration, prototype development, AI workflow design"></div>
+              </div>
+            </div>
+            <div class="team-member-block">
+              <div class="team-row">
+                <div><label for="teamMember3Name">Name <span class="hint">(owns Step 3 — Business & Workflow)</span></label><input type="text" id="teamMember3Name" value="" placeholder="This person's name"></div>
+                <div><label for="teamMember3Role">Role</label><input type="text" id="teamMember3Role" value="Business & Workflow Analyst"></div>
+                <div><label for="teamMember3Responsibility">Responsibility</label><input type="text" id="teamMember3Responsibility" value="Business problem analysis, current-state workflow, future-state workflow, business value analysis"></div>
+              </div>
+            </div>
+            <div class="team-member-block">
+              <div class="team-row">
+                <div><label for="teamMember4Name">Name <span class="hint">(owns Step 5 — Sample Proposal)</span></label><input type="text" id="teamMember4Name" value="" placeholder="This person's name"></div>
+                <div><label for="teamMember4Role">Role</label><input type="text" id="teamMember4Role" value="Sales Content, Responsible AI & Presentation Lead"></div>
+                <div><label for="teamMember4Responsibility">Responsibility</label><input type="text" id="teamMember4Responsibility" value="Sample proposal, follow-up communications, responsible AI, presentation development"></div>
+              </div>
+            </div>
+            <div class="team-member-block">
+              <div class="team-row">
+                <div><label for="teamMember5Name">Name <span class="hint">(owns Step 6 — Testing)</span></label><input type="text" id="teamMember5Name" value="" placeholder="This person's name"></div>
+                <div><label for="teamMember5Role">Role</label><input type="text" id="teamMember5Role" value="Testing, Measurement & Quality Lead"></div>
+                <div><label for="teamMember5Responsibility">Responsibility</label><input type="text" id="teamMember5Responsibility" value="Prototype testing, output evaluation, testing documentation, success measures, quality assessment"></div>
+              </div>
+            </div>
+            <div class="team-member-block">
+              <div class="team-row">
+                <div><label for="teamMember6Name">Name <span class="hint">(owns Step 7 — Implementation)</span></label><input type="text" id="teamMember6Name" value="" placeholder="This person's name"></div>
+                <div><label for="teamMember6Role">Role</label><input type="text" id="teamMember6Role" value="Implementation & Adoption Lead"></div>
+                <div><label for="teamMember6Responsibility">Responsibility</label><input type="text" id="teamMember6Responsibility" value="Implementation strategy, pilot structure, training approach, adoption, human handoffs, 30/60/90-day rollout, recommended next steps"></div>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend title="Who you are, who the client is, and what you're trying to achieve.">Project Basics</legend>
+
+            <label for="teamName">Consulting / Team Name</label>
+            <input type="text" id="teamName" value="">
+
+            <label for="clientName">Client / Company Name <span class="hint">(auto-filled from your document if found)</span></label>
+            <input type="text" id="clientName" value="">
+
+            <label for="objective">Project Objective <span class="hint">(auto-filled from your document if found)</span></label>
+            <textarea id="objective" rows="2"></textarea>
+
+            <label for="logoUpload">Team / Company Logo <span class="hint">(optional — PNG, JPG, or SVG, ideally under 500KB)</span></label>
+            <input type="file" id="logoUpload" accept="image/png,image/jpeg,image/svg+xml,image/webp">
+            <div class="logo-preview-wrap" id="logoPreviewWrap" hidden>
+              <img id="logoPreview" alt="Team logo preview">
+              <button type="button" id="btnRemoveLogo" class="btn-muted btn-small">Remove Logo</button>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="wizard-step" data-step="2" hidden>
+          <fieldset>
+            <legend title="What's broken today, why it matters, and the numbers that prove it. This step's deliverable: business problem analysis, current-state workflow, future-state workflow, before/after comparison.">Business Problem</legend>
+
+            <label for="problemSummary">Problem Summary <span class="hint">(auto-filled from your document if found)</span></label>
+            <textarea id="problemSummary" rows="3"></textarea>
+            <button type="button" class="btn-help" data-help-for="problemSummary">Need help with this?</button>
+            <div class="help-panel" id="help-problemSummary" hidden>
+              <p><strong>Ask yourselves:</strong> What's actually wrong today? Describe the situation in plain language, no jargon.</p>
+              <p><strong>Example:</strong> "Proposal drafting takes about 14 hours, win rates have dropped, and leads wait 5+ days for follow-up."</p>
+              <p>If this was auto-filled from your uploaded document, read it over — it's often the most important sentence in your whole preview, since it becomes your slide's headline.</p>
+            </div>
+
+            <label for="keyChallenges">Key Challenges <span class="hint">(one per line — your own analysis, including any bottlenecks you identify)</span></label>
+            <textarea id="keyChallenges" rows="3"></textarea>
+            <button type="button" class="btn-help" data-help-for="keyChallenges">Need help with this?</button>
+            <div class="help-panel" id="help-keyChallenges" hidden>
+              <p><strong>Ask yourselves:</strong> What slows the process down day to day? What causes errors, rework, or complaints? What's the biggest bottleneck?</p>
+              <p><strong>Example:</strong> "Reps rebuild proposals from scratch for every client." / "Follow-up falls through the cracks after the first message." / "Manual handoffs delay approvals by days."</p>
+              <p>Aim for 2-4 challenges. Be specific — "things are slow" is less useful than "proposals take 14 hours to draft."</p>
+            </div>
+
+            <label for="baselineMetrics">Baseline Metrics <span class="hint">(one per line)</span></label>
+            <textarea id="baselineMetrics" rows="3"></textarea>
+            <button type="button" class="btn-help" data-help-for="baselineMetrics">Need help with this?</button>
+            <div class="help-panel" id="help-baselineMetrics" hidden>
+              <p><strong>Ask yourselves:</strong> What number shows how big this problem is today? How long does it take? How often does it fail? What does it cost?</p>
+              <p><strong>Example:</strong> "Proposal drafting: ~14 hours." / "Follow-up delay: 5+ days for some leads."</p>
+              <p>Use real numbers from the brief if you have them. If not, make a reasonable estimate and say so.</p>
+            </div>
+
+            <label for="currentWorkflow">Current Workflow <span class="hint">(the process today, before AI)</span></label>
+            <textarea id="currentWorkflow" rows="2"></textarea>
+            <button type="button" class="btn-help" data-help-for="currentWorkflow">Need help with this?</button>
+            <div class="help-panel" id="help-currentWorkflow" hidden>
+              <p><strong>Ask yourselves:</strong> Before any AI, what are the actual steps today, in order? Where does it get stuck or slow down?</p>
+              <p><strong>Example:</strong> "Sales Conversation -&gt; Manual Notes -&gt; Manual Proposal Drafting -&gt; Review -&gt; Proposal Sent -&gt; Manual Follow-Up"</p>
+              <p>Separate each step with an arrow (-&gt;). Fill this in alongside Proposed Workflow below for a real before/after process comparison, not just a before/after number.</p>
+            </div>
+
+            <label for="workflow">Proposed Workflow <span class="hint">(Step 1 -&gt; Step 2 -&gt; Step 3)</span></label>
+            <textarea id="workflow" rows="2"></textarea>
+            <button type="button" class="btn-help" data-help-for="workflow">Need help with this?</button>
+            <div class="help-panel" id="help-workflow" hidden>
+              <p><strong>Ask yourselves:</strong> What are the steps, in order, from raw input to final output? Where does a human check the work?</p>
+              <p><strong>Example:</strong> "Sales Notes -&gt; Opportunity Brief -&gt; AI Draft -&gt; Quality Check -&gt; Human Approval -&gt; AI-Assisted Follow-Up"</p>
+              <p>Separate each step with an arrow (-&gt;) — it turns into connected boxes automatically.</p>
+            </div>
+
+            <label for="beforeAfter">Before / After Comparison <span class="hint">(one per line, prefix with "Before:" or "After:")</span></label>
+            <textarea id="beforeAfter" rows="3"></textarea>
+            <button type="button" class="btn-help" data-help-for="beforeAfter">Need help with this?</button>
+            <div class="help-panel" id="help-beforeAfter" hidden>
+              <p><strong>Ask yourselves:</strong> What changed, in numbers? Pick one or two metrics you can measure both before and after.</p>
+              <p><strong>Example:</strong> "Before: 14 hours to draft a proposal" / "After: 20 minutes with AI assistance"</p>
+              <p>If Step 1's document upload found numbers in your problem statement, the Before: lines above are already filled in for you — type your team's real, measured result right after each "After:" once you have it.</p>
+              <p>Keep the units consistent between Before and After (both in hours, or both in minutes) — mixed units can't be charted fairly, and the preview will fall back to a plain list.</p>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend title="This step owner's uploaded slide images, embedded directly into the deck right after this section.">Slides for This Step <span class="hint">(optional)</span></legend>
+            <label for="slideImagesUpload_businessWorkflow">Upload Slides <span class="hint">(optional — PNG or JPG, up to 10)</span></label>
+            <input type="file" id="slideImagesUpload_businessWorkflow" accept="image/png,image/jpeg,image/webp" multiple>
+            <div class="slide-images-preview" id="slideImagesPreviewWrap_businessWorkflow" hidden>
+              <div class="slide-thumb-list" id="slideImagesPreviewList_businessWorkflow"></div>
+              <button type="button" id="btnClearSlideImages_businessWorkflow" class="btn-muted btn-small">Remove All</button>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="wizard-step" data-step="3" hidden>
+          <fieldset>
+            <legend title="What you're proposing, and the 5 tested prompts that prove it works. This step's deliverable.">AI Solution</legend>
+
+            <label for="solutionName">Solution Name</label>
+            <input type="text" id="solutionName">
+            <button type="button" class="btn-help" data-help-for="solutionName">Need help with this?</button>
+            <div class="help-panel" id="help-solutionName" hidden>
+              <p><strong>Ask yourselves:</strong> What do you want to call your AI solution? Give it a name a client could remember.</p>
+              <p><strong>Example:</strong> "AI-Assisted Sales Communication Workflow"</p>
+              <p>Keep it short — it becomes a subheading in your preview.</p>
+            </div>
+
+            <label for="solutionDescription">Solution Description <span class="hint">(what it does, which AI tool you recommend and why, how reps stay personalized)</span></label>
+            <textarea id="solutionDescription" rows="3"></textarea>
+            <button type="button" class="btn-help" data-help-for="solutionDescription">Need help with this?</button>
+            <div class="help-panel" id="help-solutionDescription" hidden>
+              <p><strong>Ask yourselves:</strong> What does your solution actually do, which AI tool are you recommending and why, and how do people stay in control of it?</p>
+              <p><strong>Example:</strong> "An AI-assisted workflow that drafts proposals and follow-ups from sales notes, with a human reviewing everything before it's sent. We are not replacing the salesperson."</p>
+              <p>The first sentence becomes your slide's headline, so make it count.</p>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend title="Proof it works: 5 real, tested prompts.">Prototype — 5 Prompts</legend>
+
+            <div class="prompt-block">
+              <label for="prompt1Purpose">Prompt 1 Purpose <span class="hint">(what it does, e.g. "Notes -&gt; Opportunity Brief")</span></label>
+              <input type="text" id="prompt1Purpose">
+              <label for="prompt1Text">Prompt 1 Text</label>
+              <textarea id="prompt1Text" rows="4"></textarea>
+            </div>
+            <div class="prompt-block">
+              <label for="prompt2Purpose">Prompt 2 Purpose</label>
+              <input type="text" id="prompt2Purpose">
+              <label for="prompt2Text">Prompt 2 Text</label>
+              <textarea id="prompt2Text" rows="4"></textarea>
+            </div>
+            <div class="prompt-block">
+              <label for="prompt3Purpose">Prompt 3 Purpose</label>
+              <input type="text" id="prompt3Purpose">
+              <label for="prompt3Text">Prompt 3 Text</label>
+              <textarea id="prompt3Text" rows="4"></textarea>
+            </div>
+            <div class="prompt-block">
+              <label for="prompt4Purpose">Prompt 4 Purpose</label>
+              <input type="text" id="prompt4Purpose">
+              <label for="prompt4Text">Prompt 4 Text</label>
+              <textarea id="prompt4Text" rows="4"></textarea>
+            </div>
+            <div class="prompt-block">
+              <label for="prompt5Purpose">Prompt 5 Purpose</label>
+              <input type="text" id="prompt5Purpose">
+              <label for="prompt5Text">Prompt 5 Text</label>
+              <textarea id="prompt5Text" rows="4"></textarea>
+            </div>
+            <button type="button" class="btn-help" data-help-for="prompt1Text">Need help with this?</button>
+            <div class="help-panel" id="help-prompt1Text" hidden>
+              <p><strong>Ask yourselves:</strong> What did you actually build and test? Paste real prompts and real output, not descriptions of what you plan to build.</p>
+              <p><strong>Example:</strong> Purpose: "Discovery Notes -&gt; Opportunity Brief". Prompt: "Summarize these sales notes into a structured brief with client name, pain points, and next steps."</p>
+              <p>The 5 functions: Opportunity Brief, Proposal Draft, Proposal Quality Review, Follow-Up Sequence, Objection Handling. Fill in as many as you have — a blank one just won't show up in your preview.</p>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend title="This step owner's uploaded slide images, embedded directly into the deck right after this section.">Slides for This Step <span class="hint">(optional)</span></legend>
+            <label for="slideImagesUpload_aiSolution">Upload Slides <span class="hint">(optional — PNG or JPG, up to 10)</span></label>
+            <input type="file" id="slideImagesUpload_aiSolution" accept="image/png,image/jpeg,image/webp" multiple>
+            <div class="slide-images-preview" id="slideImagesPreviewWrap_aiSolution" hidden>
+              <div class="slide-thumb-list" id="slideImagesPreviewList_aiSolution"></div>
+              <button type="button" id="btnClearSlideImages_aiSolution" class="btn-muted btn-small">Remove All</button>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="wizard-step" data-step="4" hidden>
+          <fieldset>
+            <legend title="Two required deliverables from the AI Prototype: an actual sample proposal, and the 3-message follow-up sequence. This step's deliverable.">Sample Proposal &amp; Follow-Up</legend>
+
+            <label for="sampleProposal">Sample Proposal <span class="hint">(the actual AI-assisted proposal text, not a description of it)</span></label>
+            <textarea id="sampleProposal" rows="4"></textarea>
+            <button type="button" class="btn-help" data-help-for="sampleProposal">Need help with this?</button>
+            <div class="help-panel" id="help-sampleProposal" hidden>
+              <p><strong>Ask yourselves:</strong> If you ran Prompt 2 (Proposal Draft) on a real fictional scenario, what did it actually produce?</p>
+              <p>Paste that real output here — this is a required deliverable on its own, not just an example inside a prompt.</p>
+            </div>
+
+            <label for="followUpMessage1">Follow-Up Message 1 <span class="hint">(Initial Follow-Up)</span></label>
+            <textarea id="followUpMessage1" rows="2"></textarea>
+            <label for="followUpMessage2">Follow-Up Message 2 <span class="hint">(Value Follow-Up)</span></label>
+            <textarea id="followUpMessage2" rows="2"></textarea>
+            <label for="followUpMessage3">Follow-Up Message 3 <span class="hint">(Final Check-In)</span></label>
+            <textarea id="followUpMessage3" rows="2"></textarea>
+            <button type="button" class="btn-help" data-help-for="followUpMessage1">Need help with this?</button>
+            <div class="help-panel" id="help-followUpMessage1" hidden>
+              <p><strong>Ask yourselves:</strong> If a lead goes quiet, what are the 3 real messages your AI-assisted workflow would send? A quick check-in, then a value reminder, then a low-pressure final message.</p>
+              <p>Fill in the actual message text your prompt produced, not a description of what it should do.</p>
+            </div>
+
+            <label for="proposalQualityReview">Proposal Quality Review <span class="hint">(reviewing proposal outputs for tone, accuracy, professionalism)</span></label>
+            <textarea id="proposalQualityReview" rows="3"></textarea>
+            <button type="button" class="btn-help" data-help-for="proposalQualityReview">Need help with this?</button>
+            <div class="help-panel" id="help-proposalQualityReview" hidden>
+              <p><strong>Ask yourselves:</strong> When you read the sample proposal and follow-ups with a critical eye, do they sound like something Meridian would actually send? Where did you have to fix tone, accuracy, or professionalism?</p>
+              <p><strong>Example:</strong> "The first draft overstated our delivery timeline — tightened the language to match what we can actually commit to. Tone reads as professional and consistent with Meridian's voice."</p>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend title="The risks of using AI here, how you're guarding against them, and where a human stays in the loop.">Responsible AI &amp; Human Review</legend>
+
+            <label for="risksSafeguards">Risks and Safeguards <span class="hint">(topics may be auto-filled from your document — add the specifics)</span></label>
+            <textarea id="risksSafeguards" rows="4"></textarea>
+            <button type="button" class="btn-help" data-help-for="risksSafeguards">Need help with this?</button>
+            <div class="help-panel" id="help-risksSafeguards" hidden>
+              <p><strong>Ask yourselves:</strong> What could go wrong if this AI solution is used carelessly, and what is your team doing to prevent it?</p>
+              <p><strong>Example:</strong> "Accuracy: verify AI-generated claims before they go out" / "Overpromising: human review of outcomes, pricing, scope" / "Confidentiality: no client PII in public AI tools" / "Transparency: internal usage policy" / "Human approval: nothing sent without salesperson sign-off"</p>
+              <p>Cover accuracy, overpromising, confidentiality, transparency, and human approval — your rubric likely asks for all five.</p>
+            </div>
+
+            <label for="humanReview">Human Review / Handoff <span class="hint">(who checks AI output before it reaches a client, and how)</span></label>
+            <textarea id="humanReview" rows="3"></textarea>
+            <button type="button" class="btn-help" data-help-for="humanReview">Need help with this?</button>
+            <div class="help-panel" id="help-humanReview" hidden>
+              <p><strong>Ask yourselves:</strong> At what exact point does a person check the AI's work? What do they check for, and what happens if they reject it?</p>
+              <p><strong>Example:</strong> "Every AI-drafted proposal and follow-up is reviewed by the salesperson for accuracy, tone, and pricing before it's sent. Nothing goes to a client without that approval. AI Drafts. Humans Decide."</p>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend title="This step owner's uploaded slide images, embedded directly into the deck right after this section.">Slides for This Step <span class="hint">(optional)</span></legend>
+            <label for="slideImagesUpload_proposal">Upload Slides <span class="hint">(optional — PNG or JPG, up to 10)</span></label>
+            <input type="file" id="slideImagesUpload_proposal" accept="image/png,image/jpeg,image/webp" multiple>
+            <div class="slide-images-preview" id="slideImagesPreviewWrap_proposal" hidden>
+              <div class="slide-thumb-list" id="slideImagesPreviewList_proposal"></div>
+              <button type="button" id="btnClearSlideImages_proposal" class="btn-muted btn-small">Remove All</button>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="wizard-step" data-step="5" hidden>
+          <fieldset>
+            <legend title="What you tested prompts against, and what testing found. This step's deliverable.">Testing</legend>
+
+            <label for="testingCriteria">Testing Criteria <span class="hint">(one per line — what you scored each output against)</span></label>
+            <textarea id="testingCriteria" rows="3"></textarea>
+            <button type="button" class="btn-help" data-help-for="testingCriteria">Need help with this?</button>
+            <div class="help-panel" id="help-testingCriteria" hidden>
+              <p><strong>Ask yourselves:</strong> Before you can say a prompt "worked," what did you actually judge it against?</p>
+              <p><strong>Example:</strong> "Accuracy: did it stay within the info we gave it" / "Personalization: did it reflect the specific client" / "Clarity" / "Usefulness" / "Efficiency: did it reduce meaningful manual drafting" / "Human editing required: how much rewriting before it was usable"</p>
+              <p>This is your rubric, stated once — the next field is what you found when you applied it.</p>
+            </div>
+
+            <label for="testingNotes">Test Results &amp; Revisions <span class="hint">(what you tested, what failed, what you changed)</span></label>
+            <textarea id="testingNotes" rows="3"></textarea>
+            <button type="button" class="btn-help" data-help-for="testingNotes">Need help with this?</button>
+            <div class="help-panel" id="help-testingNotes" hidden>
+              <p><strong>Ask yourselves:</strong> What did you actually test your prompts against? Where did a first attempt produce a weak or wrong output, and what did you change to fix it?</p>
+              <p><strong>Example:</strong> "Tested all 5 prompts against a consistent fictional Meridian opportunity. Prompt 2's first draft invented a delivery date we never provided — added an explicit 'do not invent dates' instruction and retested."</p>
+              <p>A polished final output with no record of testing doesn't show iteration — that's specifically what this field is for.</p>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend title="How you'll know the solution actually worked.">Measurement</legend>
+
+            <label for="successMeasures">Three Success Measures <span class="hint">(one per line, pick 3)</span></label>
+            <textarea id="successMeasures" rows="3"></textarea>
+            <button type="button" class="btn-help" data-help-for="successMeasures">Need help with this?</button>
+            <div class="help-panel" id="help-successMeasures" hidden>
+              <p><strong>Ask yourselves:</strong> How will you know this actually worked? Pick measures the client already tracks, or could easily start tracking.</p>
+              <p><strong>Example:</strong> "Proposal drafting time" / "Lead follow-up time" / "Proposal win rate"</p>
+              <p>Pick 3 — that's what your cohort's rubric asks for.</p>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend title="This step owner's uploaded slide images, embedded directly into the deck right after this section.">Slides for This Step <span class="hint">(optional)</span></legend>
+            <label for="slideImagesUpload_testing">Upload Slides <span class="hint">(optional — PNG or JPG, up to 10)</span></label>
+            <input type="file" id="slideImagesUpload_testing" accept="image/png,image/jpeg,image/webp" multiple>
+            <div class="slide-images-preview" id="slideImagesPreviewWrap_testing" hidden>
+              <div class="slide-thumb-list" id="slideImagesPreviewList_testing"></div>
+              <button type="button" id="btnClearSlideImages_testing" class="btn-muted btn-small">Remove All</button>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="wizard-step" data-step="6" hidden>
+          <fieldset>
+            <legend title="Your rollout plan, phased. This step's deliverable.">Implementation Plan</legend>
+
+            <label for="implementPilot">Days 1-30 — Pilot <span class="hint">(pilot recommendation: who, how long, baseline)</span></label>
+            <textarea id="implementPilot" rows="3"></textarea>
+            <button type="button" class="btn-help" data-help-for="implementPilot">Need help with this?</button>
+            <div class="help-panel" id="help-implementPilot" hidden>
+              <p><strong>Ask yourselves:</strong> Who's in the pilot, how long does it run, and what baseline are you measuring against?</p>
+              <p><strong>Example:</strong> "Pilot with 2-3 reps for 30 days. Track drafting time and follow-up time against the 14-hour/5-day baseline."</p>
+            </div>
+
+            <label for="implementTraining">Training Requirements <span class="hint">(what people need to learn before using it)</span></label>
+            <textarea id="implementTraining" rows="2"></textarea>
+            <button type="button" class="btn-help" data-help-for="implementTraining">Need help with this?</button>
+            <div class="help-panel" id="help-implementTraining" hidden>
+              <p><strong>Ask yourselves:</strong> What do pilot participants need to know before day one — the workflow, the tool, the responsible-AI rules?</p>
+              <p><strong>Example:</strong> "Train participants on the AI-assisted workflow and responsible-AI rules before the pilot starts."</p>
+            </div>
+
+            <label for="implementHandoff">Human Handoff Points <span class="hint">(where a person takes over from AI during rollout)</span></label>
+            <textarea id="implementHandoff" rows="2"></textarea>
+            <button type="button" class="btn-help" data-help-for="implementHandoff">Need help with this?</button>
+            <div class="help-panel" id="help-implementHandoff" hidden>
+              <p><strong>Ask yourselves:</strong> During the actual rollout, at what points does a human have to step in and approve, override, or take over?</p>
+              <p><strong>Example:</strong> "Every AI output still requires human approval before it reaches a client — this doesn't change during the pilot."</p>
+            </div>
+
+            <label for="implementAdoptionRisks">Adoption Risks <span class="hint">(what could stop people from actually using this)</span></label>
+            <textarea id="implementAdoptionRisks" rows="2"></textarea>
+            <button type="button" class="btn-help" data-help-for="implementAdoptionRisks">Need help with this?</button>
+            <div class="help-panel" id="help-implementAdoptionRisks" hidden>
+              <p><strong>Ask yourselves:</strong> Even if the tool works, what could make reps not actually use it? Distrust of AI output, extra steps, unclear ownership?</p>
+              <p><strong>Example:</strong> "Reps may distrust AI-drafted proposals at first — mitigate by keeping human approval mandatory and sharing early wins from the pilot group."</p>
+            </div>
+
+            <label for="implementFeedback">Feedback Process <span class="hint">(how you collect input while the pilot runs)</span></label>
+            <textarea id="implementFeedback" rows="2"></textarea>
+            <button type="button" class="btn-help" data-help-for="implementFeedback">Need help with this?</button>
+            <div class="help-panel" id="help-implementFeedback" hidden>
+              <p><strong>Ask yourselves:</strong> How does the pilot group tell you what's working and what isn't, while it's still happening?</p>
+              <p><strong>Example:</strong> "Collect weekly feedback from the pilot group on output quality and how much editing was needed."</p>
+            </div>
+
+            <label for="implementImprove">Days 31-60 — Measure &amp; Improve <span class="hint">(what you evaluate, what you refine)</span></label>
+            <textarea id="implementImprove" rows="3"></textarea>
+            <button type="button" class="btn-help" data-help-for="implementImprove">Need help with this?</button>
+            <div class="help-panel" id="help-implementImprove" hidden>
+              <p><strong>Ask yourselves:</strong> After the pilot runs, what do you actually look at — drafting time, follow-up time, output quality, human editing, feedback? What do you change based on that?</p>
+              <p><strong>Example:</strong> "Compare drafting/follow-up times against baseline. Review pilot feedback and human-editing patterns. Refine prompts and the workflow based on what failed most often."</p>
+            </div>
+
+            <label for="implementScale">Days 61-90 — Scale Decision <span class="hint">(what determines go/no-go on wider rollout)</span></label>
+            <textarea id="implementScale" rows="3"></textarea>
+            <button type="button" class="btn-help" data-help-for="implementScale">Need help with this?</button>
+            <div class="help-panel" id="help-implementScale" hidden>
+              <p><strong>Ask yourselves:</strong> What has to be true for you to recommend scaling this beyond the pilot? What would make you NOT recommend it yet?</p>
+              <p><strong>Example:</strong> "Recommend scaling if drafting time and follow-up time both improved without a drop in proposal quality or win rate, and the pilot group actually adopted the workflow. Otherwise, extend the pilot and keep iterating."</p>
+            </div>
+
+            <label for="nextSteps">Final Recommendation <span class="hint">(one per line — the team's bottom line)</span></label>
+            <textarea id="nextSteps" rows="3"></textarea>
+            <button type="button" class="btn-help" data-help-for="nextSteps">Need help with this?</button>
+            <div class="help-panel" id="help-nextSteps" hidden>
+              <p><strong>Ask yourselves:</strong> If the client said yes today, what's the one-line bottom-line recommendation the team is making?</p>
+              <p><strong>Example:</strong> "Meridian should pilot the AI-assisted workflow before broader implementation." / "Do not present untested targets as results."</p>
+              <p>Your first item becomes this slide's headline if the phases above are empty, so lead with the most concrete action.</p>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend title="This step owner's uploaded slide images, embedded directly into the deck right after this section.">Slides for This Step <span class="hint">(optional)</span></legend>
+            <label for="slideImagesUpload_implementation">Upload Slides <span class="hint">(optional — PNG or JPG, up to 10)</span></label>
+            <input type="file" id="slideImagesUpload_implementation" accept="image/png,image/jpeg,image/webp" multiple>
+            <div class="slide-images-preview" id="slideImagesPreviewWrap_implementation" hidden>
+              <div class="slide-thumb-list" id="slideImagesPreviewList_implementation"></div>
+              <button type="button" id="btnClearSlideImages_implementation" class="btn-muted btn-small">Remove All</button>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="wizard-step" data-step="7" hidden>
+          <div class="upload-summary">You're all set. Check the live preview on the right, then use <strong>Save &amp; Get Link</strong> to save to the cloud and share it with your team, or <strong>Export HTML</strong> above when you're ready to submit.</div>
+        </div>
+
+      </form>
+
+      <div class="wizard-nav">
+        <button type="button" id="btnStepBack" class="btn-secondary">Back</button>
+        <button type="button" id="btnStepNext" class="btn-primary">Next</button>
+      </div>
+    </section>
+
+    <section class="preview-panel">
+      <div id="previewRoot"></div>
+    </section>
+  </div>
+</div>
+
+<!-- Cloud save-by-link (Supabase). Loaded from a CDN, so this one feature
+     needs an internet connection — everything else in this app works fully
+     offline. If this fails to load (no internet, blocked), Save & Get Link
+     tells the user it's unavailable; everything else keeps working. -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<script>
+(function () {
+  "use strict";
+
+  // Generic for any team: 6 team members (1 lead + 5 deliverable owners) and
+  // 5 fixed deliverable roles that map to the capstone rubric. Nobody's real
+  // name is hardcoded — each step's "owner" is read live from the matching
+  // Team Members field (see ROLE_OWNER_FIELD / ownerName below).
+  var TEAM_MEMBER_COUNT = 6;
+  var TEAM_MEMBER_SUFFIXES = ["Name", "Role", "Responsibility"];
+  var TEAM_MEMBER_FIELD_IDS = [];
+  for (var ti = 1; ti <= TEAM_MEMBER_COUNT; ti++) {
+    TEAM_MEMBER_SUFFIXES.forEach(function (suf) {
+      TEAM_MEMBER_FIELD_IDS.push("teamMember" + ti + suf);
+    });
+  }
+
+  var PROMPT_FIELD_IDS = [];
+  for (var pn = 1; pn <= 5; pn++) {
+    PROMPT_FIELD_IDS.push("prompt" + pn + "Purpose", "prompt" + pn + "Text");
+  }
+
+  var FIELD_IDS = ["teamNumber"].concat(TEAM_MEMBER_FIELD_IDS, [
+    "teamName", "clientName", "objective",
+    "problemSummary", "keyChallenges", "baselineMetrics", "currentWorkflow", "workflow", "beforeAfter",
+    "solutionName", "solutionDescription"
+  ], PROMPT_FIELD_IDS, [
+    "sampleProposal", "followUpMessage1", "followUpMessage2", "followUpMessage3", "proposalQualityReview",
+    "risksSafeguards", "humanReview",
+    "testingCriteria", "testingNotes", "successMeasures",
+    "implementPilot", "implementTraining", "implementHandoff", "implementAdoptionRisks", "implementFeedback",
+    "implementImprove", "implementScale",
+    "nextSteps"
+  ]);
+
+  // Which Team Members field (Step 2) owns each fixed deliverable role, and
+  // the display label for that role. ownerName() reads the live value at
+  // render time, so the name shown always matches what's currently typed in
+  // Step 2 — nobody's real name is ever hardcoded.
+  var ROLE_OWNER_FIELD = {
+    businessWorkflow: "teamMember3Name",
+    aiSolution: "teamMember2Name",
+    proposal: "teamMember4Name",
+    testing: "teamMember5Name",
+    implementation: "teamMember6Name"
+  };
+  var ROLE_LABELS = {
+    businessWorkflow: "Business & Workflow",
+    aiSolution: "AI Solution & Prototype",
+    proposal: "Sample Proposal & Responsible AI",
+    testing: "Testing & Measurement",
+    implementation: "Implementation Plan"
+  };
+
+  function ownerName(data, roleSlug) {
+    var field = ROLE_OWNER_FIELD[roleSlug];
+    var name = field && data[field] ? data[field].trim() : "";
+    return name || "Team Member";
+  }
+
+  var STEPS = [
+    { title: "Upload Your Document", roleSlug: "", help: "Upload the project brief your instructor gave you (a .txt or .md file works best). We'll automatically pull in your client name, business problem, and objective — nothing is invented, only what's actually in the document." },
+    { title: "Team & Project Basics", roleSlug: "", help: "Whole team — team number, everyone's name/role, your consulting team name, the client, the objective, and your logo." },
+    { title: "Business & Workflow", roleSlug: "businessWorkflow", help: "The business problem, key challenges, baseline numbers, current vs. proposed workflow, and the before/after comparison." },
+    { title: "AI Solution & Prototype", roleSlug: "aiSolution", help: "The recommended AI solution, and the 5 tested prompts that prove it works." },
+    { title: "Sample Proposal & Responsible AI", roleSlug: "proposal", help: "The sample proposal, the 3-message follow-up sequence, quality review of those outputs, and the Responsible AI risks/safeguards and human review requirements." },
+    { title: "Testing & Measurement", roleSlug: "testing", help: "The testing rubric, what testing found, and the three success measures." },
+    { title: "Implementation & Adoption", roleSlug: "implementation", help: "The phased rollout plan — pilot, training, handoffs, adoption risks, feedback, measure & improve, scale decision — plus the team's final recommendation." },
+    { title: "Review & Export", roleSlug: "", help: "You're done. Check the live preview on the right, then use Save & Get Link or Export HTML above whenever you're ready." }
+  ];
+
+  // Instructor questions from the brief, grouped by which field answers each
+  // one (see QUESTION_FIELD_MAP / mapQuestionsToFields). Session-only.
+  var currentQuestionsByField = {};
+
+  // Which fields live on each wizard step. Index-aligned with STEPS.
+  var STEP_FIELDS = [
+    [],
+    ["teamNumber", "teamName", "clientName", "objective"].concat(TEAM_MEMBER_FIELD_IDS),
+    ["problemSummary", "keyChallenges", "baselineMetrics", "currentWorkflow", "workflow", "beforeAfter"],
+    ["solutionName", "solutionDescription"].concat(PROMPT_FIELD_IDS),
+    ["sampleProposal", "followUpMessage1", "followUpMessage2", "followUpMessage3", "proposalQualityReview", "risksSafeguards", "humanReview"],
+    ["testingCriteria", "testingNotes", "successMeasures"],
+    ["implementPilot", "implementTraining", "implementHandoff", "implementAdoptionRisks", "implementFeedback", "implementImprove", "implementScale", "nextSteps"],
+    []
+  ];
+
+  function instructorQuestionsForStep(stepIndex) {
+    var fields = STEP_FIELDS[stepIndex] || [];
+    var qs = [];
+    fields.forEach(function (fid) {
+      (currentQuestionsByField[fid] || []).forEach(function (q) {
+        if (qs.indexOf(q) === -1) qs.push(q);
+      });
+    });
+    return qs;
+  }
+
+  // ---------- utilities ----------
+
+  function escapeHtml(str) {
+    return String(str == null ? "" : str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function parseMultiline(str) {
+    if (!str) return [];
+    return str.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+
+  function parseBlocks(str) {
+    if (!str) return [];
+    return str.split(/\r?\n\s*\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+
+  function parseWorkflow(str) {
+    if (!str) return [];
+    var normalized = str.replace(/\r?\n/g, " ").replace(/→/g, "->");
+    return normalized.split("->").map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+
+  // Detects an optional "Fact:" / "Recommendation:" / "Before:" / "After:" label
+  // at the start of a line.
+  function parseLabel(text) {
+    var m = /^\s*(fact|recommendation|before|after)\s*:\s*(.*)$/i.exec(text);
+    if (m) {
+      var label = m[1].charAt(0).toUpperCase() + m[1].slice(1).toLowerCase();
+      return { label: label, text: m[2] };
+    }
+    return { label: null, text: text };
+  }
+
+  var LABEL_CLASSES = {
+    fact: "tag-fact",
+    recommendation: "tag-recommendation",
+    before: "tag-before",
+    after: "tag-after"
+  };
+
+  function labelBadge(label) {
+    if (!label) return "";
+    var cls = LABEL_CLASSES[label.toLowerCase()] || "tag-fact";
+    return '<span class="tag ' + cls + '">' + escapeHtml(label) + "</span> ";
+  }
+
+  function slugify(str) {
+    return (str || "")
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+  }
+
+  // Only real base64 image data URLs are ever used as an <img src> — blocks a
+  // hand-edited save file from smuggling in something else via logoDataUrl.
+  // Accepts a locally-chosen image (data: URL) or an image already uploaded
+  // to this app's own Supabase Storage bucket (https:// URL) — the only two
+  // legitimate sources for an image src in this app. Blocks a hand-edited
+  // save/cloud payload from smuggling in an arbitrary URL.
+  function isValidImageDataUrl(str) {
+    if (typeof str !== "string") return false;
+    if (/^data:image\/(png|jpe?g|svg\+xml|webp|gif);base64,/i.test(str)) return true;
+    var bucketPrefix = SUPABASE_URL + "/storage/v1/object/public/" + SUPABASE_BUCKET + "/";
+    return str.indexOf(bucketPrefix) === 0;
+  }
+
+  // ---------- data collection ----------
+
+  function collectFormData() {
+    var data = {};
+    FIELD_IDS.forEach(function (id) {
+      var el = document.getElementById(id);
+      data[id] = el ? el.value.trim() : "";
+    });
+    return data;
+  }
+
+  function applyFormData(data) {
+    FIELD_IDS.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.value = data[id] || "";
+    });
+  }
+
+  function hasAnyContent(data) {
+    return FIELD_IDS.some(function (id) { return data[id]; })
+      || !!(data && data.logoDataUrl)
+      || !!(data && data.personSlides && SLIDE_OWNERS.some(function (who) { return data.personSlides[who] && data.personSlides[who].length; }));
+  }
+
+  // ---------- logo (kept out of FIELD_IDS since it's binary, not a text input) ----------
+
+  var currentLogoDataUrl = "";
+
+  function updateLogoPreview() {
+    var wrap = document.getElementById("logoPreviewWrap");
+    var img = document.getElementById("logoPreview");
+    if (currentLogoDataUrl) {
+      img.src = currentLogoDataUrl;
+      wrap.hidden = false;
+    } else {
+      img.src = "";
+      wrap.hidden = true;
+    }
+  }
+
+  function setLogo(dataUrl) {
+    currentLogoDataUrl = dataUrl;
+    updateLogoPreview();
+    syncState();
+  }
+
+  function clearLogo() {
+    currentLogoDataUrl = "";
+    document.getElementById("logoUpload").value = "";
+    updateLogoPreview();
+    syncState();
+  }
+
+  var MAX_LOGO_BYTES = 3 * 1024 * 1024;
+
+  function handleLogoUpload(file) {
+    if (!file) return;
+    if (!/^image\//.test(file.type)) {
+      window.alert("Please choose an image file (PNG, JPG, SVG, or WebP).");
+      return;
+    }
+    if (file.size > MAX_LOGO_BYTES) {
+      window.alert("That image is quite large (over 3MB) — try a smaller file so it doesn't bloat your saved progress.");
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function (e) { setLogo(String(e.target.result)); };
+    reader.onerror = function () { window.alert("Could not read that image."); };
+    reader.readAsDataURL(file);
+  }
+
+  // ---------- per-person presentation slide images (also kept out of FIELD_IDS) ----------
+  // Actual uploaded slide images (exported as PNG/JPG from Google Slides,
+  // PowerPoint, etc.), embedded directly — one bucket per team member who
+  // owns a deliverable, so each person's slides sit right next to their own
+  // content in the final deck instead of one big dump at the end.
+
+  var SLIDE_OWNERS = ["businessWorkflow", "aiSolution", "proposal", "testing", "implementation"];
+
+  var currentPersonSlides = {};
+  SLIDE_OWNERS.forEach(function (who) { currentPersonSlides[who] = []; });
+
+  var MAX_SLIDE_IMAGE_BYTES = 3 * 1024 * 1024;
+  var MAX_SLIDE_IMAGE_COUNT = 10;
+  var MAX_SLIDE_IMAGES_TOTAL_BYTES = 10 * 1024 * 1024;
+
+  function personSlidesTotalBytes(who) {
+    return currentPersonSlides[who].reduce(function (sum, uri) { return sum + Math.floor(uri.length * 0.75); }, 0);
+  }
+
+  function updatePersonSlidesPreview(who) {
+    var wrap = document.getElementById("slideImagesPreviewWrap_" + who);
+    var list = document.getElementById("slideImagesPreviewList_" + who);
+    list.innerHTML = "";
+    currentPersonSlides[who].forEach(function (src, i) {
+      var item = document.createElement("div");
+      item.className = "slide-thumb-item";
+      var img = document.createElement("img");
+      img.src = src;
+      img.alt = "Slide " + (i + 1);
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "slide-thumb-remove";
+      btn.title = "Remove this slide";
+      btn.textContent = "×";
+      btn.addEventListener("click", function () { removePersonSlide(who, i); });
+      item.appendChild(img);
+      item.appendChild(btn);
+      list.appendChild(item);
+    });
+    wrap.hidden = currentPersonSlides[who].length === 0;
+  }
+
+  function removePersonSlide(who, index) {
+    currentPersonSlides[who].splice(index, 1);
+    updatePersonSlidesPreview(who);
+    syncState();
+  }
+
+  function clearPersonSlides(who) {
+    if (!currentPersonSlides[who].length) return;
+    currentPersonSlides[who] = [];
+    document.getElementById("slideImagesUpload_" + who).value = "";
+    updatePersonSlidesPreview(who);
+    syncState();
+  }
+
+  function finishPersonSlidesUpload(who) {
+    updatePersonSlidesPreview(who);
+    syncState();
+  }
+
+  function handlePersonSlidesUpload(who, fileList) {
+    var files = Array.prototype.slice.call(fileList || []);
+    if (!files.length) return;
+    var remaining = MAX_SLIDE_IMAGE_COUNT - currentPersonSlides[who].length;
+    if (remaining <= 0) {
+      window.alert("You've already added " + MAX_SLIDE_IMAGE_COUNT + " slides here — remove some before adding more.");
+      return;
+    }
+    if (files.length > remaining) {
+      window.alert("Only adding the first " + remaining + " of those — " + MAX_SLIDE_IMAGE_COUNT + " slides max per section.");
+      files = files.slice(0, remaining);
+    }
+    var pending = files.length;
+    files.forEach(function (file) {
+      if (!/^image\//.test(file.type)) {
+        window.alert('"' + file.name + '" isn\'t an image — skipped. Export your slides as PNG or JPG images first.');
+        pending--;
+        if (pending === 0) finishPersonSlidesUpload(who);
+        return;
+      }
+      if (file.size > MAX_SLIDE_IMAGE_BYTES) {
+        window.alert('"' + file.name + '" is over 3MB — skipped. Try a smaller export.');
+        pending--;
+        if (pending === 0) finishPersonSlidesUpload(who);
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        var dataUrl = String(e.target.result);
+        if (personSlidesTotalBytes(who) + Math.floor(dataUrl.length * 0.75) <= MAX_SLIDE_IMAGES_TOTAL_BYTES) {
+          currentPersonSlides[who].push(dataUrl);
+        } else {
+          window.alert('"' + file.name + '" would put this section\'s slides over the combined size limit — skipped.');
+        }
+        pending--;
+        if (pending === 0) finishPersonSlidesUpload(who);
+      };
+      reader.onerror = function () {
+        pending--;
+        if (pending === 0) finishPersonSlidesUpload(who);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Full data set used for rendering/saving/exporting — text fields plus the
+  // logo and each person's uploaded slide images.
+  function collectAllData() {
+    var data = collectFormData();
+    data.logoDataUrl = currentLogoDataUrl;
+    data.personSlides = {};
+    SLIDE_OWNERS.forEach(function (who) { data.personSlides[who] = currentPersonSlides[who].slice(); });
+    return data;
+  }
+
+  // Accepts any parsed object and returns a clean {field: string, logoDataUrl,
+  // personSlides} object using only known field ids, or null if nothing
+  // usable was found. Shared by the autosave restore path and the Load
+  // Progress file import.
+  function sanitizeImportedData(parsed) {
+    if (!parsed || typeof parsed !== "object") return null;
+    var data = {};
+    FIELD_IDS.forEach(function (id) {
+      var v = parsed[id];
+      data[id] = typeof v === "string" ? v : "";
+    });
+    data.logoDataUrl = isValidImageDataUrl(parsed.logoDataUrl) ? parsed.logoDataUrl : "";
+    data.personSlides = {};
+    SLIDE_OWNERS.forEach(function (who) {
+      var arr = parsed.personSlides && Array.isArray(parsed.personSlides[who]) ? parsed.personSlides[who] : [];
+      data.personSlides[who] = arr.filter(isValidImageDataUrl);
+    });
+    return hasAnyContent(data) ? data : null;
+  }
+
+  function collectTeamMembers(data) {
+    var members = [];
+    for (var i = 1; i <= TEAM_MEMBER_COUNT; i++) {
+      var name = data["teamMember" + i + "Name"];
+      if (!name) continue;
+      members.push({
+        name: name,
+        role: data["teamMember" + i + "Role"] || "",
+        responsibility: data["teamMember" + i + "Responsibility"] || ""
+      });
+    }
+    return members;
+  }
+
+  // ---------- document upload parsing ----------
+  // Extracts only what is actually stated in the uploaded/pasted brief.
+  // Anything not found is left blank for the team to fill in.
+
+  function stripMarkdownArtifacts(s) {
+    return s
+      .replace(/\*\*/g, "")
+      .replace(/\\([.\-])/g, "$1")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function extractSectionBody(text, headingRegex) {
+    var m = headingRegex.exec(text);
+    if (!m) return "";
+    var start = m.index + m[0].length;
+    var rest = text.slice(start);
+    var stop = /\n\s*#{1,6}\s/.exec(rest);
+    var body = stop ? rest.slice(0, stop.index) : rest;
+    return body.trim();
+  }
+
+  // Splits on sentence-ending punctuation followed by whitespace or end of
+  // string. Deliberately avoids lookbehind regex for older-browser safety.
+  function splitIntoSentences(text) {
+    var out = [];
+    var buf = "";
+    for (var i = 0; i < text.length; i++) {
+      buf += text[i];
+      if (/[.!?]/.test(text[i])) {
+        var next = text[i + 1];
+        if (!next || /\s/.test(next)) {
+          out.push(buf.trim());
+          buf = "";
+        }
+      }
+    }
+    if (buf.trim()) out.push(buf.trim());
+    return out;
+  }
+
+  var NUMBER_WORDS = "one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve";
+  var METRIC_PHRASE_SOURCE = "((?:more than|approximately|about|over|at least|nearly)\\s+)?(\\d+\\+?|" + NUMBER_WORDS + ")\\s*(hours?|days?|minutes?|weeks?)";
+
+  // Sentences in the problem statement that contain a real number-plus-unit
+  // (e.g. "Proposal drafting averages 14 hours") — these are the specific,
+  // measurable pain points a team's solution has to actually address, not
+  // just the general problem paragraph.
+  function extractBaselineSentences(text) {
+    if (!text) return [];
+    var re = new RegExp(METRIC_PHRASE_SOURCE, "i");
+    return splitIntoSentences(text).filter(function (s) { return re.test(s); });
+  }
+
+  // Pulls every number+unit fragment out of a sentence, for seeding Before:
+  // lines — a single sentence often names more than one pain point (e.g.
+  // "...averages 14 hours... leads wait more than five days..."), and an
+  // earlier version of this only grabbed the first, silently dropping the
+  // rest of the problem's own numbers.
+  function extractMetricPhrases(sentence) {
+    var re = new RegExp(METRIC_PHRASE_SOURCE, "gi");
+    var phrases = [];
+    var m;
+    while ((m = re.exec(sentence)) !== null) {
+      phrases.push(m[0].trim());
+    }
+    return phrases;
+  }
+
+  function parseBriefText(text, filename) {
+    var result = {};
+
+    var teamNumMatch = /Team\s*#?\s*(\d+)/i.exec(filename || "") || /\bTeam\s+(\d+)\b/i.exec(text);
+    if (teamNumMatch) result.teamNumber = "Team " + teamNumMatch[1];
+
+    var projectBody = extractSectionBody(text, /#{1,6}[^\n]*Your Project[^\n]*\n/i);
+    if (projectBody) {
+      var paras = projectBody.split(/\n\s*\n/).map(stripMarkdownArtifacts).filter(Boolean);
+      if (paras.length) {
+        var first = paras[0];
+        if (first.length > 0 && first.length <= 70 && !/[.!?]$/.test(first)) {
+          result.clientName = first;
+          result.problemSummary = paras.slice(1).join(" ");
+        } else {
+          result.problemSummary = paras.join(" ");
+        }
+      }
+    }
+
+    // The specific measurable pain points inside the problem statement (e.g.
+    // "14 hours", "more than five days") — these become the Baseline Metrics
+    // and seed the Before side of the Before/After field, so the exact
+    // numbers a team's solution has to move are impossible to miss.
+    if (result.problemSummary) {
+      var baselineSentences = extractBaselineSentences(result.problemSummary);
+      if (baselineSentences.length) {
+        result.baselineMetrics = baselineSentences.join("\n");
+        var allPhrases = [];
+        baselineSentences.forEach(function (s) {
+          extractMetricPhrases(s).forEach(function (phrase) {
+            if (allPhrases.indexOf(phrase) === -1) allPhrases.push(phrase);
+          });
+        });
+        // Seed only the real, known Before values. The After: line is left
+        // to end right at the colon — an obvious blank to type into on
+        // screen, and if left untouched it renders as nothing in the
+        // preview/export rather than leaving placeholder text sitting in a
+        // "finished" deck.
+        var beforeLines = allPhrases.map(function (phrase) {
+          return "Before: " + phrase + "\nAfter: ";
+        });
+        if (beforeLines.length) result.beforeAfter = beforeLines.join("\n");
+      }
+    }
+
+    var challengeBody = extractSectionBody(text, /#{1,6}[^\n]*Your Challenge[^\n]*\n/i);
+    if (challengeBody) {
+      result.objective = stripMarkdownArtifacts(challengeBody);
+    }
+
+    var addressMatch = /must address:?\s*([^\n.]+)/i.exec(text);
+    if (addressMatch) {
+      var items = addressMatch[1]
+        .split(/,|\band\b/i)
+        .map(stripMarkdownArtifacts)
+        .filter(Boolean)
+        .map(function (s) { return s.charAt(0).toUpperCase() + s.slice(1); });
+      if (items.length) result.risksSafeguards = items.join("\n");
+    }
+
+    // Deliverable titles (e.g. "1. AI Prototype", "2. Implementation & Results
+    // Plan") from a "What Your Team Must Submit"-style section, used later to
+    // tie a specific step to the exact deliverable your brief actually asks for.
+    var submitBody = extractSectionBody(text, /#{1,6}[^\n]*What Your Team Must Submit[^\n]*\n/i);
+    if (submitBody) {
+      var deliverables = [];
+      var re = /\*\*\d+\\?\.\s*([^*]+?)\*\*/g;
+      var dm;
+      while ((dm = re.exec(submitBody)) !== null) {
+        var title = stripMarkdownArtifacts(dm[1]).replace(/\([^)]*\)/g, "").trim();
+        if (title) deliverables.push(title);
+      }
+      if (deliverables.length) result.deliverables = deliverables;
+    }
+
+    // The specific questions your brief actually requires an answer to
+    // (e.g. under "Answer these questions..."), pulled verbatim as bullet
+    // lines ending in "?". These are what the wizard's fields need to answer
+    // — surfaced later next to the field that answers each one.
+    var questions = [];
+    text.split(/\r?\n/).forEach(function (line) {
+      var cleaned = stripMarkdownArtifacts(line.replace(/^[\s*\-]+/, ""));
+      if (/\?\s*$/.test(cleaned) && cleaned.length > 8) questions.push(cleaned);
+    });
+    if (questions.length) result.instructorQuestions = questions;
+
+    return result;
+  }
+
+  // Which single wizard field each kind of instructor question answers.
+  // First matching pattern wins.
+  var QUESTION_FIELD_MAP = [
+    { pattern: /biggest.*problem|business.*problem|problems?\?/i, fieldId: "problemSummary" },
+    { pattern: /ai tool|recommend/i, fieldId: "solutionDescription" },
+    { pattern: /personali/i, fieldId: "solutionDescription" },
+    { pattern: /success measure|measures? should|track/i, fieldId: "successMeasures" },
+    { pattern: /risk/i, fieldId: "risksSafeguards" },
+    { pattern: /do next|next steps?/i, fieldId: "nextSteps" }
+  ];
+
+  function mapQuestionsToFields(questions) {
+    var map = {};
+    (questions || []).forEach(function (q) {
+      var m = QUESTION_FIELD_MAP.filter(function (e) { return e.pattern.test(q); })[0];
+      if (!m) return;
+      if (!map[m.fieldId]) map[m.fieldId] = [];
+      map[m.fieldId].push(q);
+    });
+    return map;
+  }
+
+  var EXTRACTABLE_FIELDS = [
+    { id: "teamNumber", label: "Team Number" },
+    { id: "clientName", label: "Client / Company Name" },
+    { id: "problemSummary", label: "Problem Summary" },
+    { id: "objective", label: "Project Objective" },
+    { id: "risksSafeguards", label: "Responsible AI topics" },
+    { id: "baselineMetrics", label: "Baseline Metrics" },
+    { id: "beforeAfter", label: "Before/After starting point" }
+  ];
+
+  function describeExtraction(extracted) {
+    var found = EXTRACTABLE_FIELDS.filter(function (f) { return extracted[f.id]; }).map(function (f) { return f.label; });
+    var missing = EXTRACTABLE_FIELDS.filter(function (f) { return !extracted[f.id]; }).map(function (f) { return f.label; });
+    var msg = "";
+    if (found.length) msg += "Found in your document: " + found.join(", ") + ". ";
+    if (missing.length) msg += "Couldn't find: " + missing.join(", ") + " — fill those in yourself. ";
+    if (extracted.deliverables && extracted.deliverables.length) {
+      msg += "Required deliverables found: " + extracted.deliverables.join(", ") + ". ";
+    }
+    if (extracted.instructorQuestions && extracted.instructorQuestions.length) {
+      msg += "Found " + extracted.instructorQuestions.length + " specific question" + (extracted.instructorQuestions.length > 1 ? "s" : "") + " your brief requires an answer to — they'll show up next to the field that answers each one. ";
+    }
+    if (extracted.baselineMetrics) {
+      msg += "Found the specific numbers your solution has to improve (" + extracted.baselineMetrics.split("\n").join("; ") + ") — pre-filled into Baseline Metrics, and started in Before/After so you just need to add your team's result. ";
+    }
+    msg += "Review everything on the next steps before moving on — nothing here is guessed, only what was actually in your document.";
+    return msg;
+  }
+
+  function applyExtractedFields(extracted) {
+    Object.keys(extracted).forEach(function (id) {
+      if (!extracted[id]) return;
+      var el = document.getElementById(id);
+      if (el) el.value = extracted[id];
+    });
+  }
+
+  // ---------- section renderers ----------
+
+  function pad(n) { return n < 10 ? "0" + n : String(n); }
+
+  // Trims text down to its first sentence (or a max length) so a field's own
+  // words can stand in as a headline — never a rewritten or invented claim.
+  function firstSentence(text, maxLen) {
+    if (!text) return "";
+    var trimmed = text.replace(/\s+/g, " ").trim();
+    var m = /^(.*?[.!?])(\s|$)/.exec(trimmed);
+    var out = m ? m[1] : trimmed;
+    if (out.length > maxLen) out = out.slice(0, maxLen).replace(/\s+\S*$/, "") + "…";
+    return out;
+  }
+
+  // Cover leads with the client (company) — the first thing a reader,
+  // especially a teacher grading many of these, needs to see is WHO this is
+  // for. Solution name and team are secondary, in the subtitle.
+  function renderHero(data) {
+    var title = data.clientName || data.teamName || "Capstone Project";
+    var eyebrow = data.teamNumber ? escapeHtml(data.teamNumber) + " · Capstone Project Preview" : "Capstone Project Preview";
+    var logo = isValidImageDataUrl(data.logoDataUrl) ? data.logoDataUrl : null;
+    var preparedDate = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+    var confidentialTag = "Strictly Confidential — Prepared for " + (data.clientName || "Internal Review");
+    var subtitleParts = [];
+    if (data.solutionName) subtitleParts.push(data.solutionName);
+    if (data.teamName) subtitleParts.push("Prepared by " + data.teamName);
+    var html = '<section class="prev-hero">';
+    html += '<p class="prev-confidential-tag">' + escapeHtml(confidentialTag) + "</p>";
+    if (logo) {
+      html += '<img class="prev-logo" src="' + escapeHtml(logo) + '" alt="Team logo">';
+    }
+    html += '<p class="prev-eyebrow">' + eyebrow + "</p>";
+    html += "<h1>" + escapeHtml(title) + "</h1>";
+    if (subtitleParts.length) {
+      html += '<p class="prev-hero-sub">' + escapeHtml(subtitleParts.join(" — ")) + "</p>";
+    }
+    html += '<p class="prev-hero-date">Prepared ' + escapeHtml(preparedDate) + "</p>";
+    html += "</section>";
+    return html;
+  }
+
+  function renderAgenda(entries) {
+    if (!entries.length) return "";
+    var html = '<section class="card agenda-slide">';
+    html += '<h2 class="card-title">Agenda</h2>';
+    html += '<ol class="agenda-list">';
+    entries.forEach(function (e) {
+      html += '<li><span class="agenda-num">' + e.num + '</span><span class="agenda-title">' + escapeHtml(e.title) + "</span></li>";
+    });
+    html += "</ol></section>";
+    return html;
+  }
+
+  // Synthesizes a top-line summary purely from what the team already wrote —
+  // it re-displays their own fields together, never invents new claims.
+  function renderExecutiveSummary(data) {
+    var problem = data.problemSummary ? parseLabel(data.problemSummary).text : "";
+    var solutionText = [
+      data.solutionName || "",
+      data.solutionDescription ? parseLabel(data.solutionDescription).text : ""
+    ].filter(Boolean).join(" — ");
+    var measures = parseMultiline(data.successMeasures);
+    if (!problem && !solutionText && !measures.length) return "";
+
+    var html = '<section class="card exec-summary">';
+    html += '<h2 class="card-title">Executive Summary</h2>';
+    html += '<div class="exec-grid">';
+    if (problem) {
+      html += '<div class="exec-col"><span class="exec-label">The Problem</span><p>' + escapeHtml(problem) + "</p></div>";
+    }
+    if (solutionText) {
+      html += '<div class="exec-col"><span class="exec-label">Our Recommendation</span><p>' + escapeHtml(solutionText) + "</p></div>";
+    }
+    if (measures.length) {
+      html += '<div class="exec-col"><span class="exec-label">Expected Impact</span><p>' + escapeHtml(measures.join(" · ")) + "</p></div>";
+    }
+    html += "</div></section>";
+    return html;
+  }
+
+  function renderOverview(data) {
+    if (!data.clientName && !data.teamName && !data.teamNumber && !data.objective) return "";
+    var html = '<section class="card">';
+    html += '<h2 class="card-title">Overview</h2>';
+    if (data.clientName || data.teamName || data.teamNumber) {
+      html += '<div class="overview-grid">';
+      if (data.clientName) {
+        html += '<div class="overview-item"><span class="ov-label">Client</span><span class="ov-value">' + escapeHtml(data.clientName) + "</span></div>";
+      }
+      if (data.teamName) {
+        html += '<div class="overview-item"><span class="ov-label">Team</span><span class="ov-value">' + escapeHtml(data.teamName) + "</span></div>";
+      }
+      if (data.teamNumber) {
+        html += '<div class="overview-item"><span class="ov-label">Team Number</span><span class="ov-value">' + escapeHtml(data.teamNumber) + "</span></div>";
+      }
+      html += "</div>";
+    }
+    if (data.objective) {
+      var parsed = parseLabel(data.objective);
+      html += '<p class="overview-objective"><span class="ov-label">Project Objective</span><br>' + labelBadge(parsed.label) + escapeHtml(parsed.text) + "</p>";
+    }
+    html += "</section>";
+    return html;
+  }
+
+  function renderList(lines) {
+    return "<ul>" + lines.map(function (line) {
+      var parsed = parseLabel(line);
+      return "<li>" + labelBadge(parsed.label) + escapeHtml(parsed.text) + "</li>";
+    }).join("") + "</ul>";
+  }
+
+  // Wraps a {title, headline, body} section into a numbered "slide": a kicker
+  // (and, when a headline is available, a bigger headline pulled straight
+  // from the team's own text) plus a confidentiality/page-number footer —
+  // applied uniformly to every body section below the cover.
+  function wrapSlide(n, entry, confidentialTag) {
+    var html = '<section class="card slide">';
+    if (entry.headline) {
+      html += '<p class="card-kicker"><span class="card-num">' + n + "</span>" + escapeHtml(entry.title) + "</p>";
+      html += '<h2 class="slide-headline">' + escapeHtml(entry.headline) + "</h2>";
+    } else {
+      html += '<h2 class="card-title"><span class="card-num">' + n + "</span>" + escapeHtml(entry.title) + "</h2>";
+    }
+    if (entry.owner) {
+      html += '<p class="card-owner">Owner: ' + escapeHtml(entry.owner) + "</p>";
+    }
+    html += entry.body;
+    html += '<div class="slide-footer"><span>' + escapeHtml(confidentialTag) + "</span><span>" + n + "</span></div>";
+    html += "</section>";
+    return html;
+  }
+
+  // ---------- body section builders ----------
+  // Each returns null (nothing to show) or {title, headline?, body}. buildPreviewHTML
+  // decides numbering, the Agenda, and slide chrome from whichever of these are non-null.
+
+  function renderBusinessProblem(data) {
+    var challenges = parseMultiline(data.keyChallenges);
+    var metrics = parseMultiline(data.baselineMetrics);
+    if (!data.problemSummary && !challenges.length && !metrics.length) return null;
+
+    var parsedSummary = data.problemSummary ? parseLabel(data.problemSummary) : null;
+    var body = "";
+    if (data.problemSummary) {
+      body += '<p class="card-lead">' + labelBadge(parsedSummary.label) + escapeHtml(parsedSummary.text) + "</p>";
+    }
+    if (challenges.length || metrics.length) {
+      body += '<div class="split-grid">';
+      if (challenges.length) {
+        body += '<div><h3 class="sub-title">Key Challenges</h3>' + renderList(challenges) + "</div>";
+      }
+      if (metrics.length) {
+        body += '<div><h3 class="sub-title">Baseline Metrics</h3>' + renderList(metrics) + "</div>";
+      }
+      body += "</div>";
+    }
+    return {
+      title: "Business Problem",
+      headline: parsedSummary ? firstSentence(parsedSummary.text, 140) : "",
+      owner: ownerName(data, "businessWorkflow"),
+      body: body
+    };
+  }
+
+  function renderSolution(data) {
+    if (!data.solutionName && !data.solutionDescription) return null;
+    var parsedDesc = data.solutionDescription ? parseLabel(data.solutionDescription) : null;
+    var body = "";
+    if (data.solutionName) {
+      body += '<h3 class="solution-name">' + escapeHtml(data.solutionName) + "</h3>";
+    }
+    if (data.solutionDescription) {
+      body += '<p class="card-lead">' + labelBadge(parsedDesc.label) + escapeHtml(parsedDesc.text) + "</p>";
+    }
+    return {
+      title: "Proposed AI Solution",
+      headline: parsedDesc ? firstSentence(parsedDesc.text, 140) : "",
+      owner: ownerName(data, "aiSolution"),
+      body: body
+    };
+  }
+
+  function renderWorkflowDiagram(steps) {
+    var html = '<div class="workflow">';
+    steps.forEach(function (step, i) {
+      if (i > 0) html += '<span class="workflow-arrow">&#8594;</span>';
+      html += '<div class="workflow-step">' + escapeHtml(step) + "</div>";
+    });
+    html += "</div>";
+    return html;
+  }
+
+  function renderWorkflow(data) {
+    var current = parseWorkflow(data.currentWorkflow);
+    var proposed = parseWorkflow(data.workflow);
+    if (!current.length && !proposed.length) return null;
+    var body;
+    if (current.length && proposed.length) {
+      body = '<h3 class="sub-title">Current Process</h3>' + renderWorkflowDiagram(current)
+        + '<h3 class="sub-title">Proposed Process</h3>' + renderWorkflowDiagram(proposed);
+    } else if (proposed.length) {
+      body = renderWorkflowDiagram(proposed);
+    } else {
+      body = '<h3 class="sub-title">Current Process</h3>' + renderWorkflowDiagram(current);
+    }
+    return { title: "Workflow", owner: ownerName(data, "businessWorkflow"), body: body };
+  }
+
+  // Common time units, normalized to minutes, so "14 hours" vs "20 minutes"
+  // compares fairly instead of comparing the raw numbers 14 vs 20.
+  var TIME_UNIT_MINUTES = {
+    second: 1 / 60, seconds: 1 / 60, sec: 1 / 60, secs: 1 / 60,
+    minute: 1, minutes: 1, min: 1, mins: 1,
+    hour: 60, hours: 60, hr: 60, hrs: 60,
+    day: 1440, days: 1440,
+    week: 10080, weeks: 10080
+  };
+
+  function parseValueWithUnit(str) {
+    var m = /(\d+(?:\.\d+)?)\s*([a-zA-Z%]*)/.exec(str || "");
+    return m ? { value: parseFloat(m[1]), unit: (m[2] || "").toLowerCase() } : null;
+  }
+
+  // Converts to a comparable {value, kind}. Same "kind" on both sides of a
+  // pair means the comparison is fair; different kinds (e.g. hours vs a plain
+  // count) can't be compared honestly, so the caller bails on charting.
+  function comparableValue(parsed) {
+    if (!parsed) return null;
+    if (Object.prototype.hasOwnProperty.call(TIME_UNIT_MINUTES, parsed.unit)) {
+      return { value: parsed.value * TIME_UNIT_MINUTES[parsed.unit], kind: "time" };
+    }
+    if (parsed.unit === "") return { value: parsed.value, kind: "plain" };
+    if (parsed.unit === "%") return { value: parsed.value, kind: "percent" };
+    return { value: parsed.value, kind: "unit:" + parsed.unit };
+  }
+
+  // Renders a Before/After bar chart only when EVERY line in the field is a
+  // labeled Before:/After: pair with a real, fairly-comparable number in it,
+  // so nothing is ever silently dropped or misleadingly compared — otherwise
+  // returns "" and the caller falls back to a plain list.
+  function renderBeforeAfterChart(lines) {
+    var befores = [], afters = [];
+    lines.forEach(function (line) {
+      var parsed = parseLabel(line);
+      if (!parsed.label) return;
+      var lbl = parsed.label.toLowerCase();
+      if (lbl === "before") befores.push(parsed.text);
+      else if (lbl === "after") afters.push(parsed.text);
+    });
+    if (befores.length + afters.length !== lines.length) return "";
+    if (!befores.length || befores.length !== afters.length) return "";
+
+    var pairs = [];
+    for (var i = 0; i < befores.length; i++) {
+      var bComp = comparableValue(parseValueWithUnit(befores[i]));
+      var aComp = comparableValue(parseValueWithUnit(afters[i]));
+      if (!bComp || !aComp || bComp.kind !== aComp.kind) return "";
+      pairs.push({ beforeText: befores[i], afterText: afters[i], beforeVal: bComp.value, afterVal: aComp.value });
+    }
+    var maxVal = Math.max.apply(null, pairs.reduce(function (acc, p) { acc.push(p.beforeVal, p.afterVal); return acc; }, []));
+    if (!maxVal) return "";
+
+    var html = '<div class="chart-block">';
+    pairs.forEach(function (p) {
+      var beforePct = Math.max(4, (p.beforeVal / maxVal) * 100).toFixed(1);
+      var afterPct = Math.max(4, (p.afterVal / maxVal) * 100).toFixed(1);
+      html += '<div class="chart-pair">';
+      html += '<div class="chart-bar-row"><span class="chart-bar-tag before">Before</span><div class="chart-bar-track"><div class="chart-bar-fill before" style="width:' + beforePct + '%"></div></div><span class="chart-bar-value">' + escapeHtml(p.beforeText) + "</span></div>";
+      html += '<div class="chart-bar-row"><span class="chart-bar-tag after">After</span><div class="chart-bar-track"><div class="chart-bar-fill after" style="width:' + afterPct + '%"></div></div><span class="chart-bar-value">' + escapeHtml(p.afterText) + "</span></div>";
+      html += "</div>";
+    });
+    html += "</div>";
+    return html;
+  }
+
+  function collectPrompts(data) {
+    var prompts = [];
+    for (var i = 1; i <= 5; i++) {
+      var purpose = data["prompt" + i + "Purpose"] || "";
+      var text = data["prompt" + i + "Text"] || "";
+      if (!purpose && !text) continue;
+      prompts.push({ n: i, purpose: purpose, text: text });
+    }
+    return prompts;
+  }
+
+  function renderPrototype(data) {
+    var prompts = collectPrompts(data);
+    var beforeAfter = parseMultiline(data.beforeAfter);
+    if (!prompts.length && !beforeAfter.length) return null;
+    var body = prompts.map(function (p) {
+      var heading = "Prompt " + p.n + (p.purpose ? " — " + p.purpose : "");
+      var block = '<h3 class="sub-title">' + escapeHtml(heading) + "</h3>";
+      if (p.text) block += '<pre class="prototype-block">' + escapeHtml(p.text) + "</pre>";
+      return block;
+    }).join("");
+    if (beforeAfter.length) {
+      body += '<h3 class="sub-title">Before / After</h3>';
+      var chart = renderBeforeAfterChart(beforeAfter);
+      body += chart || renderList(beforeAfter);
+    }
+    return { title: "Prototype / Prompt Examples", owner: ownerName(data, "aiSolution"), body: body };
+  }
+
+  function renderSampleProposal(data) {
+    if (!data.sampleProposal) return null;
+    return { title: "Sample Proposal", owner: ownerName(data, "proposal"), body: '<pre class="prototype-block">' + escapeHtml(data.sampleProposal) + "</pre>" };
+  }
+
+  function renderFollowUpSequence(data) {
+    var messages = [data.followUpMessage1, data.followUpMessage2, data.followUpMessage3]
+      .map(function (m, i) { return m ? { n: i + 1, text: m } : null; })
+      .filter(Boolean);
+    if (!messages.length) return null;
+    var body = messages.map(function (m) {
+      return '<h3 class="sub-title">Message ' + m.n + '</h3><pre class="prototype-block">' + escapeHtml(m.text) + "</pre>";
+    }).join("");
+    return { title: "Follow-Up Sequence", owner: ownerName(data, "proposal"), body: body };
+  }
+
+  function renderProposalQualityReview(data) {
+    if (!data.proposalQualityReview) return null;
+    var parsed = parseLabel(data.proposalQualityReview);
+    return {
+      title: "Proposal Quality Review",
+      owner: ownerName(data, "proposal"),
+      body: '<p class="card-lead">' + labelBadge(parsed.label) + escapeHtml(parsed.text) + "</p>"
+    };
+  }
+
+  function renderTestingNotes(data) {
+    var criteria = parseMultiline(data.testingCriteria);
+    var hasNotes = !!data.testingNotes;
+    if (!criteria.length && !hasNotes) return null;
+    var body = "";
+    if (criteria.length) {
+      body += '<h3 class="sub-title">Testing Criteria</h3><ul class="risk-list">' + criteria.map(function (line) {
+        var parsed = parseLabel(line);
+        return "<li>" + labelBadge(parsed.label) + escapeHtml(parsed.text) + "</li>";
+      }).join("") + "</ul>";
+    }
+    if (hasNotes) {
+      var parsedNotes = parseLabel(data.testingNotes);
+      body += (criteria.length ? '<h3 class="sub-title">Results & Revisions</h3>' : "") +
+        '<p class="card-lead">' + labelBadge(parsedNotes.label) + escapeHtml(parsedNotes.text) + "</p>";
+    }
+    return { title: "Testing & Results", owner: ownerName(data, "testing"), body: body };
+  }
+
+  function renderHumanReview(data) {
+    if (!data.humanReview) return null;
+    var parsed = parseLabel(data.humanReview);
+    return {
+      title: "Human Review & Handoff",
+      owner: ownerName(data, "proposal"),
+      body: '<p class="card-lead">' + labelBadge(parsed.label) + escapeHtml(parsed.text) + "</p>"
+    };
+  }
+
+  function renderMeasures(data) {
+    var measures = parseMultiline(data.successMeasures);
+    if (!measures.length) return null;
+    var body = '<div class="measures-grid">';
+    measures.forEach(function (m, i) {
+      body += '<div class="measure-card"><span class="measure-num">' + pad(i + 1) + '</span><span class="measure-text">' + escapeHtml(m) + "</span></div>";
+    });
+    body += "</div>";
+    return { title: "Success Measures", owner: ownerName(data, "testing"), body: body };
+  }
+
+  function renderResponsibleAI(data) {
+    var risks = parseMultiline(data.risksSafeguards);
+    if (!risks.length) return null;
+    var body = '<ul class="risk-list">' + risks.map(function (line) {
+      var parsed = parseLabel(line);
+      return "<li>" + labelBadge(parsed.label) + escapeHtml(parsed.text) + "</li>";
+    }).join("") + "</ul>";
+    return { title: "Responsible AI", owner: ownerName(data, "proposal"), body: body };
+  }
+
+  // The phased implementation plan, walked through one deliverable at a time
+  // (pilot, then training, handoff, adoption risk, and feedback as
+  // pilot-support detail, then measure/improve and the scale decision), plus
+  // a closing one-line team
+  // recommendation. Any subset can be filled in alone — a team that only
+  // fills in Final Recommendation still gets a working slide.
+  function renderNextSteps(data) {
+    var items = [
+      { label: "Days 1-30 — Pilot", text: data.implementPilot },
+      { label: "Training Requirements", text: data.implementTraining },
+      { label: "Human Handoff Points", text: data.implementHandoff },
+      { label: "Adoption Risks", text: data.implementAdoptionRisks },
+      { label: "Feedback Process", text: data.implementFeedback },
+      { label: "Days 31-60 — Measure & Improve", text: data.implementImprove },
+      { label: "Days 61-90 — Scale Decision", text: data.implementScale }
+    ].filter(function (p) { return p.text; });
+    var steps = parseMultiline(data.nextSteps);
+    if (!items.length && !steps.length) return null;
+
+    var body = items.map(function (p) {
+      return '<h3 class="sub-title">' + escapeHtml(p.label) + '</h3><p class="card-lead">' + escapeHtml(p.text) + "</p>";
+    }).join("");
+    if (steps.length) {
+      body += (items.length ? '<h3 class="sub-title">Final Recommendation</h3>' : "") +
+        '<ol class="next-steps">' + steps.map(function (line) {
+          var parsed = parseLabel(line);
+          return "<li>" + labelBadge(parsed.label) + escapeHtml(parsed.text) + "</li>";
+        }).join("") + "</ol>";
+    }
+    var headlineSource = items.length ? items[0].text : parseLabel(steps[0]).text;
+    return {
+      title: "Implementation Plan",
+      headline: "Recommended first step: " + firstSentence(headlineSource, 100),
+      owner: ownerName(data, "implementation"),
+      body: body
+    };
+  }
+
+  function renderTeam(data) {
+    var members = collectTeamMembers(data);
+    if (!members.length) return null;
+    var body = '<div class="team-list">';
+    members.forEach(function (m) {
+      body += '<div class="team-member-card">';
+      body += '<div class="team-member-head"><span class="team-name">' + escapeHtml(m.name) + "</span>";
+      if (m.role) body += '<span class="team-role">' + escapeHtml(m.role) + "</span>";
+      body += "</div>";
+      if (m.responsibility) body += '<p class="team-responsibility">' + escapeHtml(m.responsibility) + "</p>";
+      body += "</div>";
+    });
+    body += "</div>";
+    return { title: "Team", body: body };
+  }
+
+  // A step owner's own uploaded slide images, embedded directly — sits right
+  // after their own content section in the deck, not lumped into one dump at
+  // the end.
+  function renderPersonSlideGallery(data, who) {
+    var images = ((data.personSlides && data.personSlides[who]) || []).filter(isValidImageDataUrl);
+    if (!images.length) return null;
+    var body = '<div class="slide-images-grid">' + images.map(function (src, i) {
+      return '<div class="slide-image-item"><span class="slide-image-caption">Slide ' + (i + 1) + '</span><img class="slide-image" src="' + escapeHtml(src) + '" alt="Slide ' + (i + 1) + '"></div>';
+    }).join("") + "</div>";
+    return { title: ROLE_LABELS[who] + " — Slides", owner: ownerName(data, who), body: body };
+  }
+
+  function renderFooter() {
+    return '<p class="prev-footer">Prepared with the Capstone Preview Generator</p>';
+  }
+
+  // ---------- top-level render ----------
+
+  function buildPreviewHTML(data) {
+    if (!hasAnyContent(data)) {
+      return '<div class="empty-state"><h2>Nothing here yet</h2><p>Fill in the form on the left to get started.</p></div>';
+    }
+    // Every body section is computed once, so the Agenda and the numbered
+    // slides that follow always agree on titles and numbering — no separate
+    // "does this have content" checks to keep in sync. Order follows the
+    // deck's fixed flow: business problem and workflow, then AI solution and
+    // prototype, then sales content and Responsible AI, then testing and
+    // measures, then the implementation plan — each step owner's own
+    // uploaded slides sit right after their own content, not lumped at the
+    // end.
+    var sections = [
+      renderBusinessProblem(data),
+      renderWorkflow(data),
+      renderPersonSlideGallery(data, "businessWorkflow"),
+      renderSolution(data),
+      renderPrototype(data),
+      renderPersonSlideGallery(data, "aiSolution"),
+      renderSampleProposal(data),
+      renderFollowUpSequence(data),
+      renderProposalQualityReview(data),
+      renderResponsibleAI(data),
+      renderHumanReview(data),
+      renderPersonSlideGallery(data, "proposal"),
+      renderTestingNotes(data),
+      renderMeasures(data),
+      renderPersonSlideGallery(data, "testing"),
+      renderNextSteps(data),
+      renderPersonSlideGallery(data, "implementation"),
+      renderTeam(data)
+    ].filter(Boolean);
+
+    var confidentialTag = "Confidential — " + (data.clientName || data.teamName || "Draft");
+    var agenda = renderAgenda(sections.map(function (s, i) { return { num: pad(i + 1), title: s.title }; }));
+    var front = renderHero(data) + agenda + renderExecutiveSummary(data) + renderOverview(data);
+    var body = sections.map(function (s, i) { return wrapSlide(pad(i + 1), s, confidentialTag); }).join("");
+    return '<article class="preview-page">' + front + body + renderFooter() + "</article>";
+  }
+
+  function renderPreview() {
+    var data = collectAllData();
+    document.getElementById("previewRoot").innerHTML = buildPreviewHTML(data);
+  }
+
+  // ---------- autosave (best-effort, browser-local only) ----------
+
+  var DRAFT_STORAGE_KEY = "capstonePreviewGenerator.draft.v2";
+
+  function persistDraft(data) {
+    try {
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      // Storage unavailable (private browsing, disabled, etc). Autosave is a
+      // convenience, not a requirement, so fail silently.
+    }
+  }
+
+  function readDraft() {
+    try {
+      var raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (!raw) return null;
+      return sanitizeImportedData(JSON.parse(raw));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function clearDraft() {
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch (e) {}
+  }
+
+  // Renders the preview and autosaves in one step; use after any
+  // programmatic change to the form (typing, upload, file import).
+  function syncState() {
+    renderPreview();
+    persistDraft(collectAllData());
+  }
+
+  // ---------- cloud save-by-link (Supabase, best-effort) ----------
+  // Save & Get Link stores the whole project (fields, logo, slide images) in
+  // a shared Supabase project keyed by a short share code, and shows a link
+  // (?p=<code>) anyone can open to load it straight back — no JSON file, no
+  // account, no file-passing. The anon key below is meant to be public (it's
+  // how Supabase's client-side auth works — real access control is the
+  // table/bucket's row-level security policies, not key secrecy). This whole
+  // feature is best-effort: if the CDN script fails to load or the network
+  // call errors, Save & Get Link just reports that saving isn't available
+  // right now — everything else in the app (typing, preview, autosave,
+  // Export HTML) keeps working exactly as if this feature didn't exist.
+
+  var SUPABASE_URL = "https://lhmllzbzysqrjezhqpey.supabase.co";
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxobWxsemJ6eXNxcmplemhxcGV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczMzgwOTMsImV4cCI6MjEwMjkxNDA5M30.yuxLAuvICuQkvBn9s1KCfyklzrIFAAk4DHL0Ge-S3rQ";
+  var SUPABASE_TABLE = "capstone_projects";
+  var SUPABASE_BUCKET = "capstone-slides";
+
+  var supabaseClient = null;
+  var currentShareCode = "";
+
+  function getSupabaseClient() {
+    if (supabaseClient) return supabaseClient;
+    if (typeof window.supabase === "undefined" || typeof window.supabase.createClient !== "function") return null;
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return supabaseClient;
+  }
+
+  // Unambiguous alphabet (no 0/O/1/l/i) since a person may need to read this
+  // code aloud or retype it.
+  function makeShareCode() {
+    var alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+    var code = "";
+    for (var i = 0; i < 6; i++) code += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+    return code;
+  }
+
+  function dataUrlToBlob(dataUrl) {
+    var parts = dataUrl.split(",");
+    var mimeMatch = /data:(.*?);base64/.exec(parts[0]);
+    var mime = mimeMatch ? mimeMatch[1] : "image/png";
+    var binary = atob(parts[1]);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new Blob([bytes], { type: mime });
+  }
+
+  function extForDataUrl(dataUrl) {
+    var mime = (/^data:(.*?);base64,/.exec(dataUrl) || [])[1] || "";
+    if (/svg/.test(mime)) return "svg";
+    if (/jpe?g/.test(mime)) return "jpg";
+    if (/webp/.test(mime)) return "webp";
+    return "png";
+  }
+
+  function uploadDataUrl(client, path, dataUrl) {
+    var mime = (/^data:(.*?);base64,/.exec(dataUrl) || [])[1] || "image/png";
+    return client.storage.from(SUPABASE_BUCKET)
+      .upload(path, dataUrlToBlob(dataUrl), { upsert: true, contentType: mime })
+      .then(function (res) {
+        if (res.error) throw res.error;
+        return client.storage.from(SUPABASE_BUCKET).getPublicUrl(path).data.publicUrl;
+      });
+  }
+
+  // Uploads any not-yet-uploaded (data: URL) images to Storage under this
+  // project's share code, returning a copy of the image fields with local
+  // data: URLs replaced by public Storage URLs. Images already saved from a
+  // previous Save (already an https:// URL) are left alone — re-saving only
+  // uploads what's new.
+  function uploadProjectImages(client, code, data) {
+    var pending = [];
+    var out = { logoDataUrl: data.logoDataUrl || "", personSlides: {} };
+
+    if (isValidImageDataUrl(data.logoDataUrl) && /^data:/.test(data.logoDataUrl)) {
+      var logoPath = code + "/logo." + extForDataUrl(data.logoDataUrl);
+      pending.push(uploadDataUrl(client, logoPath, data.logoDataUrl).then(function (url) { out.logoDataUrl = url; }));
+    }
+
+    SLIDE_OWNERS.forEach(function (who) {
+      var slides = (data.personSlides && data.personSlides[who]) || [];
+      out.personSlides[who] = slides.slice();
+      slides.forEach(function (src, i) {
+        if (!/^data:/.test(src)) return;
+        var path = code + "/" + who + "/" + i + "." + extForDataUrl(src);
+        pending.push(uploadDataUrl(client, path, src).then(function (url) { out.personSlides[who][i] = url; }));
+      });
+    });
+
+    return Promise.all(pending).then(function () { return out; });
+  }
+
+  function showShareLink(code) {
+    currentShareCode = code;
+    var url = location.origin + location.pathname + "?p=" + code;
+    document.getElementById("shareLinkUrl").value = url;
+    document.getElementById("shareLinkBox").hidden = false;
+  }
+
+  function saveToCloud() {
+    var data = collectAllData();
+    if (!hasAnyContent(data)) {
+      window.alert("Nothing to save yet — fill in some fields first.");
+      return;
+    }
+    var client = getSupabaseClient();
+    if (!client) {
+      window.alert("Can't save to the cloud right now (no internet, or the save library didn't load). Your work is still autosaved in this browser — try again once you're back online.");
+      return;
+    }
+    var code = currentShareCode || makeShareCode();
+    var btn = document.getElementById("btnSaveCloud");
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+    uploadProjectImages(client, code, data)
+      .then(function (images) {
+        var payload = {};
+        FIELD_IDS.forEach(function (id) { payload[id] = data[id]; });
+        payload.logoDataUrl = images.logoDataUrl;
+        payload.personSlides = images.personSlides;
+        return client.from(SUPABASE_TABLE).upsert({ code: code, data: payload, updated_at: new Date().toISOString() });
+      })
+      .then(function (res) {
+        if (res.error) throw res.error;
+        showShareLink(code);
+      })
+      .catch(function (err) {
+        window.alert("Couldn't save to the cloud: " + (err && err.message ? err.message : "unknown error"));
+      })
+      .then(function () {
+        btn.disabled = false;
+        btn.textContent = "Save & Get Link";
+      });
+  }
+
+  function loadFromCloud(code) {
+    var client = getSupabaseClient();
+    if (!client) {
+      window.alert("Can't reach the saved project right now (no internet, or the save library didn't load). Try refreshing the page.");
+      return;
+    }
+    client.from(SUPABASE_TABLE).select("data").eq("code", code).maybeSingle()
+      .then(function (res) {
+        if (res.error || !res.data) {
+          window.alert("Couldn't find a saved project for that link.");
+          return;
+        }
+        var clean = sanitizeImportedData(res.data.data);
+        if (!clean) {
+          window.alert("That saved project doesn't have any recognizable data.");
+          return;
+        }
+        applyFormData(clean);
+        currentLogoDataUrl = clean.logoDataUrl || "";
+        updateLogoPreview();
+        SLIDE_OWNERS.forEach(function (who) {
+          currentPersonSlides[who] = (clean.personSlides && clean.personSlides[who]) || [];
+          updatePersonSlidesPreview(who);
+        });
+        showShareLink(code);
+        syncState();
+      })
+      .catch(function () {
+        window.alert("Couldn't reach the saved project right now.");
+      });
+  }
+
+  // ---------- actions ----------
+
+  function clearForm() {
+    if (!window.confirm("Clear all project information? This cannot be undone.")) return;
+    applyFormData({});
+    clearDraft();
+    currentLogoDataUrl = "";
+    currentQuestionsByField = {};
+    document.getElementById("logoUpload").value = "";
+    updateLogoPreview();
+    SLIDE_OWNERS.forEach(function (who) {
+      currentPersonSlides[who] = [];
+      document.getElementById("slideImagesUpload_" + who).value = "";
+      updatePersonSlidesPreview(who);
+    });
+    document.getElementById("uploadSummary").hidden = true;
+    document.getElementById("docPasteText").value = "";
+    renderPreview();
+    showStep(0);
+  }
+
+  // Saves a text file for the viewer. When this page is running inside a
+  // Claude Artifact host, plain `<a download>` clicks are inert there, so it
+  // goes through the platform's downloads capability instead; when it's just
+  // a double-clicked local file (no window.claude), it uses the classic
+  // Blob + anchor-click approach, which works fine there.
+  function classicBlobDownload(filename, text, mimeType) {
+    var blob = new Blob([text], { type: mimeType });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  async function offerFileDownload(filename, text, mimeType) {
+    var inClaudeHost = !!(window.claude && typeof window.claude.use === "function");
+    if (!inClaudeHost) {
+      classicBlobDownload(filename, text, mimeType);
+      return;
+    }
+    var downloads = null;
+    try { downloads = await window.claude.use("downloads"); } catch (e) { downloads = null; }
+    if (!downloads) {
+      window.alert("Downloads aren't available in this view. Open the app's local index.html file for full export support.");
+      return;
+    }
+    try {
+      await downloads.save({ filename: filename, data: text });
+    } catch (err) {
+      var code = err && err.code;
+      if (code === "declined") return;
+      if (code === "rate_limited") {
+        window.alert("A save prompt is already open — try again in a moment.");
+        return;
+      }
+      if (code === "extension_not_enabled" || code === "rejected_extension") {
+        var fallbackName = filename.replace(/\.[^.]+$/, ".txt");
+        try {
+          await downloads.save({ filename: fallbackName, data: text });
+          window.alert('This view doesn\'t allow that file type, so it saved as "' + fallbackName + '" instead — rename the extension back if you need to.');
+        } catch (err2) {
+          window.alert("Couldn't save this file in this view. Open the app's local index.html file for full export support.");
+        }
+        return;
+      }
+      window.alert("Couldn't save this file: " + (err && err.message ? err.message : "unknown error"));
+    }
+  }
+
+  // If a browser-local draft exists, offer to restore it. Returns true if
+  // the form was populated (so init() can skip the initial empty render).
+  function tryRestoreDraft() {
+    var draft = readDraft();
+    if (!draft) return false;
+    if (!window.confirm("Restore your saved progress from this browser?")) return false;
+    applyFormData(draft);
+    currentLogoDataUrl = draft.logoDataUrl || "";
+    updateLogoPreview();
+    SLIDE_OWNERS.forEach(function (who) {
+      currentPersonSlides[who] = (draft.personSlides && draft.personSlides[who]) || [];
+      updatePersonSlidesPreview(who);
+    });
+    syncState();
+    return true;
+  }
+
+  function exportHTML() {
+    var data = collectAllData();
+    if (!hasAnyContent(data)) {
+      window.alert("Fill in some project information before exporting.");
+      return;
+    }
+    var title = data.solutionName || data.teamName || "Capstone Project Preview";
+    var body = buildPreviewHTML(data);
+    var doc = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n" +
+      "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
+      "<title>" + escapeHtml(title) + "</title>\n<style>\n" + PREVIEW_CSS + "\n</style>\n</head>\n<body>\n" +
+      "<div class=\"export-wrap\">" + body + "</div>\n</body>\n</html>\n";
+
+    var filename = slugify(data.clientName || data.teamName || "capstone") + "-preview.html";
+    offerFileDownload(filename, doc, "text/html");
+  }
+
+  // ---------- upload step ----------
+
+  function finishUpload(extracted) {
+    applyExtractedFields(extracted);
+    currentQuestionsByField = mapQuestionsToFields(extracted.instructorQuestions);
+    syncState();
+    var summaryEl = document.getElementById("uploadSummary");
+    summaryEl.textContent = describeExtraction(extracted);
+    summaryEl.hidden = false;
+  }
+
+  function handleFileUpload(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      finishUpload(parseBriefText(String(e.target.result), file.name));
+    };
+    reader.onerror = function () {
+      window.alert("Could not read that file. Try pasting the text instead.");
+    };
+    reader.readAsText(file);
+  }
+
+  function handlePastedText() {
+    var text = document.getElementById("docPasteText").value;
+    if (!text.trim()) {
+      window.alert("Paste some text first.");
+      return;
+    }
+    finishUpload(parseBriefText(text, ""));
+  }
+
+  // ---------- wizard navigation ----------
+
+  var currentStep = 0;
+
+  function showStep(idx) {
+    currentStep = Math.max(0, Math.min(STEPS.length - 1, idx));
+    document.querySelectorAll(".wizard-step").forEach(function (el) {
+      el.hidden = Number(el.getAttribute("data-step")) !== currentStep;
+    });
+    document.getElementById("stepProgressLabel").textContent = "Step " + (currentStep + 1) + " of " + STEPS.length + ": " + STEPS[currentStep].title;
+    document.getElementById("stepHelpText").textContent = STEPS[currentStep].help;
+    document.getElementById("btnStepBack").style.visibility = currentStep === 0 ? "hidden" : "visible";
+    document.getElementById("btnStepNext").style.visibility = currentStep === STEPS.length - 1 ? "hidden" : "visible";
+
+    var questionsEl = document.getElementById("stepQuestionsText");
+    var stepQuestions = instructorQuestionsForStep(currentStep);
+    if (stepQuestions.length) {
+      questionsEl.textContent = "Your brief asks: " + stepQuestions.map(function (q) { return '"' + q + '"'; }).join("  ·  ");
+      questionsEl.hidden = false;
+    } else {
+      questionsEl.hidden = true;
+    }
+
+    var ownerEl = document.getElementById("stepOwnerText");
+    var roleSlug = STEPS[currentStep].roleSlug;
+    if (roleSlug) {
+      ownerEl.textContent = "This section is " + ownerName(collectFormData(), roleSlug) + "'s deliverable.";
+      ownerEl.hidden = false;
+    } else {
+      ownerEl.hidden = true;
+    }
+    var panel = document.querySelector(".form-panel");
+    if (panel) panel.scrollTop = 0;
+  }
+
+  function nextStep() { showStep(currentStep + 1); }
+  function prevStep() { showStep(currentStep - 1); }
+
+  // ---------- preview CSS (shared by live preview and Export HTML output) ----------
+
+  var PREVIEW_CSS = [
+    'body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background:#eef0f3; color:#1c2430; -webkit-font-smoothing:antialiased; }',
+    ".export-wrap { padding: 40px 16px; }",
+    ".preview-page { max-width:960px; margin:0 auto; display:flex; flex-direction:column; gap:20px; }",
+    ".prev-hero { position:relative; background: linear-gradient(135deg, #14213d 0%, #1c2f52 55%, #1f3a5f 100%); color:#fff; padding:44px 44px 32px; border-radius:10px; box-shadow:0 1px 3px rgba(20,33,61,0.12), 0 8px 24px rgba(20,33,61,0.10); aspect-ratio:16/9; display:flex; flex-direction:column; justify-content:center; }",
+    ".prev-confidential-tag { margin:0 0 20px; font-size:0.68rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:#8fa0bd; }",
+    ".prev-logo { max-height:48px; max-width:220px; display:block; margin-bottom:16px; object-fit:contain; }",
+    ".prev-eyebrow { margin:0 0 8px; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:#a9803d; }",
+    ".prev-hero h1 { margin:0; font-size:2.4rem; line-height:1.15; font-weight:800; letter-spacing:-0.01em; }",
+    ".prev-hero-sub { margin:12px 0 0; font-size:1.05rem; color:#c3ccdb; }",
+    ".prev-hero-date { margin:14px 0 0; font-size:0.75rem; color:#8fa0bd; }",
+    ".card { position:relative; background:#fff; border-radius:10px; box-shadow:0 1px 3px rgba(20,33,61,0.08), 0 8px 24px rgba(20,33,61,0.06); padding:36px 44px; aspect-ratio:16/9; display:flex; flex-direction:column; }",
+    ".card-title { margin:0 0 16px; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#4a5568; display:flex; align-items:baseline; gap:8px; }",
+    ".card-kicker { margin:0 0 8px; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#4a5568; display:flex; align-items:baseline; gap:8px; }",
+    ".card-num { color:#fff; background:#a9803d; font-size:0.68rem; font-weight:700; padding:2px 6px; border-radius:4px; font-variant-numeric:tabular-nums; }",
+    ".slide-headline { margin:0 0 18px; font-size:1.6rem; line-height:1.25; font-weight:800; letter-spacing:-0.01em; color:#14213d; }",
+    ".card-owner { margin:0 0 14px; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#a9803d; }",
+    ".slide-footer { display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:14px; border-top:1px solid #eef0f3; font-size:0.68rem; letter-spacing:0.03em; color:#a0a8b4; font-variant-numeric:tabular-nums; }",
+    ".card-lead { margin:0; font-size:0.98rem; line-height:1.65; color:#1c2430; }",
+    ".agenda-list { list-style:none; margin:0; padding:0; }",
+    ".agenda-list li { display:flex; align-items:baseline; gap:16px; padding:12px 0; border-bottom:1px solid #eef0f3; }",
+    ".agenda-list li:last-child { border-bottom:none; }",
+    ".agenda-num { flex:0 0 30px; font-weight:700; color:#a9803d; font-variant-numeric:tabular-nums; }",
+    ".agenda-title { font-size:0.98rem; font-weight:600; color:#1c2430; }",
+    ".exec-summary { background: linear-gradient(180deg, #fbfaf7 0%, #ffffff 100%); }",
+    ".exec-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:24px; }",
+    ".exec-col .exec-label { display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a9803d; margin-bottom:6px; }",
+    ".exec-col p { margin:0; font-size:0.92rem; line-height:1.6; color:#1c2430; }",
+    ".sub-title { margin:18px 0 8px; font-size:0.85rem; font-weight:700; color:#4a5568; }",
+    ".overview-grid { display:flex; gap:32px; flex-wrap:wrap; margin-bottom: 14px; }",
+    ".overview-item { display:flex; flex-direction:column; gap:2px; }",
+    ".ov-label { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#94a0b2; }",
+    ".ov-value { font-size:1rem; font-weight:600; color:#1c2430; }",
+    ".overview-objective { margin:0; font-size:0.98rem; line-height:1.65; }",
+    ".split-grid { display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:18px; }",
+    "ul, ol { margin:0; padding-left:20px; }",
+    "ul li, ol li { font-size:0.92rem; line-height:1.6; margin-bottom:6px; color:#1c2430; }",
+    ".solution-name { margin:0 0 8px; font-size:1.15rem; font-weight:700; color:#14213d; }",
+    ".workflow { display:flex; flex-wrap:wrap; align-items:center; gap:8px 4px; }",
+    ".workflow-step { background:#fff; border:1px solid #e2e5ea; border-radius:8px; padding:12px 16px; font-weight:600; font-size:0.88rem; box-shadow:0 1px 2px rgba(20,33,61,0.05); }",
+    ".workflow-arrow { color:#a9803d; font-size:1.1rem; padding:0 4px; }",
+    ".prototype-block { background:#f7f8fa; border:1px solid #eef0f3; border-radius:8px; padding:16px 18px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:0.85rem; line-height:1.6; white-space:pre-wrap; word-wrap:break-word; margin:0 0 14px; color:#1c2430; }",
+    ".prototype-block:last-child { margin-bottom:0; }",
+    ".chart-pair { margin-bottom:16px; }",
+    ".chart-pair:last-child { margin-bottom:0; }",
+    ".chart-bar-row { display:flex; align-items:center; gap:10px; margin-bottom:6px; }",
+    ".chart-bar-tag { flex:0 0 46px; font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; }",
+    ".chart-bar-tag.before { color:#a34a3a; }",
+    ".chart-bar-tag.after { color:#1f6d43; }",
+    ".chart-bar-track { flex:1 1 auto; min-width:40px; background:#eef0f3; border-radius:4px; height:20px; overflow:hidden; }",
+    ".chart-bar-fill { height:100%; border-radius:4px; }",
+    ".chart-bar-fill.before { background:#d98a7a; }",
+    ".chart-bar-fill.after { background:#5fae82; }",
+    ".chart-bar-value { flex:0 0 auto; max-width:45%; font-size:0.82rem; color:#1c2430; }",
+    ".measures-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:16px; }",
+    ".measure-card { border:1px solid #e2e5ea; border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:6px; }",
+    ".measure-num { font-size:0.72rem; font-weight:700; letter-spacing:0.06em; color:#a9803d; }",
+    ".measure-text { font-size:0.95rem; font-weight:600; color:#1c2430; }",
+    ".risk-list li::marker { color:#a9803d; }",
+    ".next-steps { list-style:none; padding:0; counter-reset:step; }",
+    ".next-steps li { counter-increment:step; position:relative; padding-left:36px; margin-bottom:14px; }",
+    ".next-steps li::before { content: counter(step, decimal-leading-zero); position:absolute; left:0; top:0; font-weight:700; color:#a9803d; font-size:0.8rem; }",
+    ".team-list { display:flex; flex-direction:column; gap:14px; }",
+    ".team-member-card { border-bottom:1px solid #eef0f3; padding-bottom:12px; }",
+    ".team-member-card:last-child { border-bottom:none; padding-bottom:0; }",
+    ".team-member-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; }",
+    ".team-name { font-weight:600; font-size:0.95rem; }",
+    ".team-role { color:#5b6472; font-size:0.85rem; }",
+    ".team-responsibility { margin:4px 0 0; font-size:0.85rem; color:#5b6472; line-height:1.5; }",
+    ".tag { display:inline-block; font-size:0.65rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; padding:2px 7px; border-radius:4px; vertical-align:middle; }",
+    ".tag-fact { background:#e7f0ea; color:#1f6d43; }",
+    ".tag-recommendation { background:#fdf2e0; color:#9a6b1f; }",
+    ".tag-before { background:#f6e9e7; color:#a34a3a; }",
+    ".tag-after { background:#e7f0ea; color:#1f6d43; }",
+    ".slide-images-grid { display:flex; flex-direction:column; gap:24px; }",
+    ".slide-image-caption { display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#a9803d; margin-bottom:8px; }",
+    ".slide-image { width:100%; display:block; border-radius:8px; border:1px solid #e2e5ea; box-shadow:0 1px 2px rgba(20,33,61,0.06); }",
+    ".prev-footer { margin:4px 0 0; padding:0; font-size:0.72rem; color:#94a0b2; text-align:center; }",
+    ".empty-state { max-width:520px; margin:80px auto; text-align:center; color:#94a0b2; }",
+    ".empty-state h2 { color:#5b6472; font-size:1.05rem; margin-bottom:6px; }",
+    "@media (max-width:600px) {",
+    "  .prev-hero { padding:32px 22px 26px; aspect-ratio:auto; }",
+    "  .card { padding:24px 22px; aspect-ratio:auto; }",
+    "  .split-grid { grid-template-columns:1fr; }",
+    "  .slide-footer { flex-direction:column; align-items:flex-start; gap:4px; margin-top:20px; }",
+    "}"
+  ].join("\n");
+
+  function injectPreviewStyles() {
+    var style = document.createElement("style");
+    style.textContent = PREVIEW_CSS;
+    document.head.appendChild(style);
+  }
+
+  // ---------- init ----------
+
+  function init() {
+    injectPreviewStyles();
+
+    document.getElementById("btnClear").addEventListener("click", clearForm);
+    document.getElementById("btnExport").addEventListener("click", exportHTML);
+    document.getElementById("btnSaveCloud").addEventListener("click", saveToCloud);
+    document.getElementById("btnCopyLink").addEventListener("click", function () {
+      var input = document.getElementById("shareLinkUrl");
+      input.select();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(input.value).catch(function () {});
+      } else {
+        document.execCommand("copy");
+      }
+    });
+    document.getElementById("projectForm").addEventListener("input", syncState);
+
+    document.getElementById("docUpload").addEventListener("change", function () {
+      handleFileUpload(this.files[0]);
+    });
+    document.getElementById("btnTogglePaste").addEventListener("click", function () {
+      var area = document.getElementById("pasteArea");
+      area.hidden = !area.hidden;
+    });
+    document.getElementById("btnUsePasted").addEventListener("click", handlePastedText);
+    document.getElementById("btnSkipUpload").addEventListener("click", nextStep);
+    document.getElementById("btnStepNext").addEventListener("click", nextStep);
+    document.getElementById("btnStepBack").addEventListener("click", prevStep);
+
+    document.getElementById("logoUpload").addEventListener("change", function () {
+      handleLogoUpload(this.files[0]);
+    });
+    document.getElementById("btnRemoveLogo").addEventListener("click", clearLogo);
+
+    SLIDE_OWNERS.forEach(function (who) {
+      document.getElementById("slideImagesUpload_" + who).addEventListener("change", function () {
+        handlePersonSlidesUpload(who, this.files);
+        this.value = "";
+      });
+      document.getElementById("btnClearSlideImages_" + who).addEventListener("click", function () {
+        clearPersonSlides(who);
+      });
+    });
+
+    document.querySelectorAll(".btn-help").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var panel = document.getElementById("help-" + this.getAttribute("data-help-for"));
+        if (panel) panel.hidden = !panel.hidden;
+      });
+    });
+
+    var sharedCode = /[?&]p=([a-z0-9]+)/i.exec(location.search);
+    if (sharedCode) {
+      renderPreview();
+      loadFromCloud(sharedCode[1]);
+    } else {
+      var restored = tryRestoreDraft();
+      if (!restored) renderPreview();
+    }
+    showStep(0);
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>
