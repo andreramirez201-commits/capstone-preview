@@ -276,11 +276,20 @@
   .team-row {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    align-items: end;
+    align-items: start;
     gap: 10px;
     margin-bottom: 16px;
   }
   .team-row label { margin-top: 0; }
+  /* Lives below the input (not inside the label) so a long step-owner hint
+     can wrap to any number of lines without pushing that column's input out
+     of line with Role/Responsibility's — every label stays "Name", one
+     line, so the three inputs always start at the same height. */
+  .team-row-hint {
+    margin: 4px 0 0;
+    font-size: 0.75rem;
+    color: var(--gray-400);
+  }
 
   .prompt-block {
     padding-bottom: 14px;
@@ -407,35 +416,35 @@
             </div>
             <div class="team-member-block">
               <div class="team-row">
-                <div><label for="teamMember2Name">Name <span class="hint">(owns Step 4 — AI Solution)</span></label><input type="text" id="teamMember2Name" value="" placeholder="This person's name"></div>
+                <div><label for="teamMember2Name">Name</label><input type="text" id="teamMember2Name" value="" placeholder="This person's name"><p class="team-row-hint">Owns Step 4 — AI Solution</p></div>
                 <div><label for="teamMember2Role">Role</label><input type="text" id="teamMember2Role" value="AI / Prompt & Prototype Lead"></div>
                 <div><label for="teamMember2Responsibility">Responsibility</label><input type="text" id="teamMember2Responsibility" value="Prompt development, prompt iteration, prototype development, AI workflow design"></div>
               </div>
             </div>
             <div class="team-member-block">
               <div class="team-row">
-                <div><label for="teamMember3Name">Name <span class="hint">(owns Step 3 — Business & Workflow)</span></label><input type="text" id="teamMember3Name" value="" placeholder="This person's name"></div>
+                <div><label for="teamMember3Name">Name</label><input type="text" id="teamMember3Name" value="" placeholder="This person's name"><p class="team-row-hint">Owns Step 3 — Business &amp; Workflow</p></div>
                 <div><label for="teamMember3Role">Role</label><input type="text" id="teamMember3Role" value="Business & Workflow Analyst"></div>
                 <div><label for="teamMember3Responsibility">Responsibility</label><input type="text" id="teamMember3Responsibility" value="Business problem analysis, current-state workflow, future-state workflow, business value analysis"></div>
               </div>
             </div>
             <div class="team-member-block">
               <div class="team-row">
-                <div><label for="teamMember4Name">Name <span class="hint">(owns Step 5 — Sample Proposal)</span></label><input type="text" id="teamMember4Name" value="" placeholder="This person's name"></div>
+                <div><label for="teamMember4Name">Name</label><input type="text" id="teamMember4Name" value="" placeholder="This person's name"><p class="team-row-hint">Owns Step 5 — Sample Proposal</p></div>
                 <div><label for="teamMember4Role">Role</label><input type="text" id="teamMember4Role" value="Sales Content, Responsible AI & Presentation Lead"></div>
                 <div><label for="teamMember4Responsibility">Responsibility</label><input type="text" id="teamMember4Responsibility" value="Sample proposal, follow-up communications, responsible AI, presentation development"></div>
               </div>
             </div>
             <div class="team-member-block">
               <div class="team-row">
-                <div><label for="teamMember5Name">Name <span class="hint">(owns Step 6 — Testing)</span></label><input type="text" id="teamMember5Name" value="" placeholder="This person's name"></div>
+                <div><label for="teamMember5Name">Name</label><input type="text" id="teamMember5Name" value="" placeholder="This person's name"><p class="team-row-hint">Owns Step 6 — Testing</p></div>
                 <div><label for="teamMember5Role">Role</label><input type="text" id="teamMember5Role" value="Testing, Measurement & Quality Lead"></div>
                 <div><label for="teamMember5Responsibility">Responsibility</label><input type="text" id="teamMember5Responsibility" value="Prototype testing, output evaluation, testing documentation, success measures, quality assessment"></div>
               </div>
             </div>
             <div class="team-member-block">
               <div class="team-row">
-                <div><label for="teamMember6Name">Name <span class="hint">(owns Step 7 — Implementation)</span></label><input type="text" id="teamMember6Name" value="" placeholder="This person's name"></div>
+                <div><label for="teamMember6Name">Name</label><input type="text" id="teamMember6Name" value="" placeholder="This person's name"><p class="team-row-hint">Owns Step 7 — Implementation</p></div>
                 <div><label for="teamMember6Role">Role</label><input type="text" id="teamMember6Role" value="Implementation & Adoption Lead"></div>
                 <div><label for="teamMember6Responsibility">Responsibility</label><input type="text" id="teamMember6Responsibility" value="Implementation strategy, pilot structure, training approach, adoption, human handoffs, 30/60/90-day rollout, recommended next steps"></div>
               </div>
@@ -1421,16 +1430,64 @@
     return (stop ? rest.slice(0, stop.index) : rest).trim();
   }
 
+  // Reads a markdown table with a header row that names a Role column (e.g.
+  // "| Team Member | Role | Primary Ownership |") — a common export shape
+  // (Google Docs, Word) for a team roster — and returns its rows as members.
+  // Returns null when no such table exists anywhere in the document.
+  function parseTeamTable(text) {
+    var lines = text.split(/\r?\n/);
+    var rowRe = /^\s*\|.*\|\s*$/;
+
+    function cellsOf(line) {
+      var cells = line.split("|").map(stripMarkdownArtifacts);
+      if (cells.length && cells[0] === "") cells.shift();
+      if (cells.length && cells[cells.length - 1] === "") cells.pop();
+      return cells;
+    }
+
+    for (var i = 0; i < lines.length - 1; i++) {
+      if (!rowRe.test(lines[i])) continue;
+      var sepLine = lines[i + 1];
+      if (!/^[\s|:-]+$/.test(sepLine) || sepLine.indexOf("-") === -1) continue;
+
+      var headers = cellsOf(lines[i]).map(function (c) { return c.toLowerCase(); });
+      var nameIdx = -1, roleIdx = -1, respIdx = -1;
+      headers.forEach(function (h, idx) {
+        if (nameIdx === -1 && (h.indexOf("member") !== -1 || h.indexOf("name") !== -1)) nameIdx = idx;
+        else if (roleIdx === -1 && h.indexOf("role") !== -1) roleIdx = idx;
+        else if (respIdx === -1 && (h.indexOf("owner") !== -1 || h.indexOf("respons") !== -1)) respIdx = idx;
+      });
+      if (nameIdx === -1 || roleIdx === -1) continue;
+
+      var members = [];
+      var j = i + 2;
+      while (j < lines.length && rowRe.test(lines[j])) {
+        var cells = cellsOf(lines[j]);
+        var name = cells[nameIdx] || "";
+        if (name) {
+          members.push({
+            name: name,
+            role: cells[roleIdx] || "",
+            responsibility: respIdx !== -1 ? (cells[respIdx] || "") : ""
+          });
+        }
+        j++;
+      }
+      if (members.length) return members;
+    }
+    return null;
+  }
+
   function parseTeamDoc(text) {
     var result = {};
+    var members = parseTeamTable(text) || [];
     var teamSection = extractTeamSectionBody(text);
-    var members = [];
     var headings = [];
 
     // Only scan for "### Name" style headings when we're actually inside a
     // confirmed "## Team" section — otherwise every heading in an unrelated
     // document would look like a person entry.
-    if (teamSection !== null) {
+    if (!members.length && teamSection !== null) {
       var headingRe = /^#{2,4}\s+([^\n]+?)\s*$/gm;
       var hm;
       while ((hm = headingRe.exec(teamSection)) !== null) {
@@ -1439,7 +1496,9 @@
       headings = headings.filter(function (h) { return !/^team$/i.test(h.name); });
     }
 
-    if (headings.length) {
+    if (members.length) {
+      // Table already found every member — nothing else to do.
+    } else if (headings.length) {
       headings.forEach(function (h, i) {
         var next = headings[i + 1];
         var block = teamSection.slice(h.end, next ? next.start : teamSection.length);
@@ -1489,7 +1548,7 @@
       if (name) found.push(name + (extracted["teamMember" + i + "Role"] ? " (" + extracted["teamMember" + i + "Role"] + ")" : ""));
     }
     if (!found.length) {
-      return "Couldn't find any team members in that document — check the format (a heading per person with a Role and Owns: list works best) or just fill the fields in below.";
+      return "Couldn't find any team members in that document — check the format (a table with a Role column, a heading per person with a Role and Owns: list, or a \"Name — Role\" list all work) or just fill the fields in below.";
     }
     return "Found " + found.length + " team member" + (found.length > 1 ? "s" : "") + ": " + found.join(", ") +
       ". Responsibilities are only filled in where the document actually listed one — review everything below.";
