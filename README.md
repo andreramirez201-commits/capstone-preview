@@ -55,6 +55,11 @@ instructor. It's not editable back into the form; use Save & Get Link for that.
 - **Team & Project Basics (Step 2)** is where you type in your own 6 names, roles, and
   responsibilities. Team Members 2-6 each own one of the 5 fixed deliverable steps — the hint next
   to each name field says which step.
+- **Upload your team roles & responsibilities doc (Step 2, optional)** and it fills in all 6
+  names, roles, and responsibilities automatically — reads either a heading-per-person doc (a
+  "### Name" heading, a Role line, and an "Owns:" list, like this project's own CONTEXT.md) or a
+  plain "Name — Role" list (like a CLAUDE.md-style team list). Only overwrites what the document
+  actually contains; anything not found is left as-is for you to fill in or edit.
 - **Every deliverable step shows its real owner.** Whatever name is typed into that member's Step 2
   field shows up as the **Owner: [Name]** tag on the matching slide(s) — live, as you type.
 - **Each person's step has its own slide upload.** If someone already built their own slide(s)
@@ -102,8 +107,9 @@ default browser, with everything except Save & Get Link working fully offline.
 2. **Step 1 — Upload Your Document.** Upload the instructor's project brief (`.txt` or `.md` works
    best, or paste the text). No document handy? Click **Skip — I'll fill this in myself**.
 3. **Step 2 — Team & Project Basics.** Type in your team number, all 6 names, and check the roles —
-   edit if your team splits work differently. Fill in your team name, the client, the objective, and
-   a logo (optional).
+   edit if your team splits work differently. Or upload your team roles & responsibilities doc to
+   fill all 6 in automatically. Fill in your team name, the client, the objective, and a logo
+   (optional).
 4. **Step 3** — Problem Summary, Key Challenges, Baseline Metrics, Current Workflow, Proposed
    Workflow (both `Step 1 -> Step 2 -> Step 3`, arrows), Before/After Comparison (`Before: ...` /
    `After: ...`, one per line). Upload slides if that person built any.

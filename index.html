@@ -385,6 +385,18 @@
           <fieldset>
             <legend title="Who's on the team, their role, and which deliverable step below is theirs.">Team Members</legend>
 
+            <div class="upload-box" style="margin-bottom:16px;">
+              <label class="upload-label" for="teamDocUpload">Upload your team roles &amp; responsibilities doc <span class="hint">(.txt or .md — optional)</span></label>
+              <input type="file" id="teamDocUpload" accept=".txt,.md,.markdown,text/plain,text/markdown">
+              <button type="button" id="btnToggleTeamPaste" class="btn-secondary btn-small">Or paste the text instead</button>
+              <div id="teamPasteArea" hidden style="width:100%;">
+                <label for="teamDocPasteText">Paste your team roster text</label>
+                <textarea id="teamDocPasteText" rows="8" placeholder="Paste your team's names, roles, and responsibilities here..."></textarea>
+                <button type="button" id="btnUseTeamPasted" class="btn-secondary btn-small" style="margin-top:8px;">Use This Text</button>
+              </div>
+              <div id="teamUploadSummary" class="upload-summary" hidden></div>
+            </div>
+
             <div class="team-member-block">
               <div class="team-row">
                 <div><label for="teamMember1Name">Name</label><input type="text" id="teamMember1Name" value="" placeholder="Team lead's name"></div>
@@ -1383,6 +1395,134 @@
       map[m.fieldId].push(q);
     });
     return map;
+  }
+
+  // Parses a team roster / responsibilities document into up to 6 team
+  // members, in document order. Reads the same shape this project's own
+  // CONTEXT.md "## Team" section uses (a heading per person, a **Role:**
+  // line, and an "Owns:" bullet list for the responsibility) and falls back
+  // to a plain "Name — Role" / "Name - Role" line per person (e.g. a CLAUDE.md
+  // team list) when there's no Owns: list to read a responsibility from.
+  // Team section can end at the next heading, but unlike Step 1's sections,
+  // its content is itself made of "### Name" sub-headings — so it must stop
+  // only at the next heading of the SAME level or higher, not at those.
+  // Returns null when no "## Team" (or similar) heading exists at all — the
+  // signal callers use to know they're NOT bounded to a real team section, so
+  // they don't go scanning every heading in an unrelated document (like the
+  // instructor brief) as if each one were a person entry.
+  function extractTeamSectionBody(text) {
+    var m = /^(#{1,6})\s*Team(?:\s+Members?)?\s*:?\s*\n/im.exec(text);
+    if (!m) return null;
+    var level = m[1].length;
+    var start = m.index + m[0].length;
+    var rest = text.slice(start);
+    var stop = new RegExp("\\n#{1," + level + "}\\s").exec(rest);
+    return (stop ? rest.slice(0, stop.index) : rest).trim();
+  }
+
+  function parseTeamDoc(text) {
+    var result = {};
+    var teamSection = extractTeamSectionBody(text);
+    var members = [];
+    var headings = [];
+
+    // Only scan for "### Name" style headings when we're actually inside a
+    // confirmed "## Team" section — otherwise every heading in an unrelated
+    // document would look like a person entry.
+    if (teamSection !== null) {
+      var headingRe = /^#{2,4}\s+([^\n]+?)\s*$/gm;
+      var hm;
+      while ((hm = headingRe.exec(teamSection)) !== null) {
+        headings.push({ name: hm[1].trim(), start: hm.index, end: hm.index + hm[0].length });
+      }
+      headings = headings.filter(function (h) { return !/^team$/i.test(h.name); });
+    }
+
+    if (headings.length) {
+      headings.forEach(function (h, i) {
+        var next = headings[i + 1];
+        var block = teamSection.slice(h.end, next ? next.start : teamSection.length);
+        var roleMatch = /\*\*Role:?\*\*\s*([^\n]+)/i.exec(block) || /^Role:\s*([^\n]+)/im.exec(block);
+        var owns = [];
+        var ownsBody = extractSectionBody(block, /Owns:?\s*\n/i);
+        if (ownsBody) {
+          ownsBody.split(/\r?\n/).forEach(function (line) {
+            var li = /^[ \t]*[-*]\s+(.+)/.exec(line);
+            if (li) owns.push(stripMarkdownArtifacts(li[1]));
+          });
+        }
+        members.push({
+          name: stripMarkdownArtifacts(h.name),
+          role: roleMatch ? stripMarkdownArtifacts(roleMatch[1]) : "",
+          responsibility: owns.join(", ")
+        });
+      });
+    } else {
+      // Only ever reads actual list items (a leading "-", "*", or "1.") for
+      // this fallback — never bare prose lines — so uploading the wrong
+      // document (e.g. the instructor brief) can't harvest false positives
+      // out of unrelated sentences that happen to contain a colon or dash.
+      (teamSection !== null ? teamSection : text).split(/\r?\n/).forEach(function (line) {
+        var bullet = /^[ \t]*(?:[-*]|\d+[.)])\s+(.+)/.exec(line);
+        if (!bullet) return;
+        var cleaned = stripMarkdownArtifacts(bullet[1]);
+        var m = /^(.{2,40}?)\s+[—–\-:]\s+(.+)$/.exec(cleaned);
+        if (m) members.push({ name: m[1].trim(), role: m[2].trim(), responsibility: "" });
+      });
+    }
+
+    members.slice(0, TEAM_MEMBER_COUNT).forEach(function (m, i) {
+      var n = i + 1;
+      if (m.name) result["teamMember" + n + "Name"] = m.name;
+      if (m.role) result["teamMember" + n + "Role"] = m.role;
+      if (m.responsibility) result["teamMember" + n + "Responsibility"] = m.responsibility;
+    });
+
+    return result;
+  }
+
+  function describeTeamExtraction(extracted) {
+    var found = [];
+    for (var i = 1; i <= TEAM_MEMBER_COUNT; i++) {
+      var name = extracted["teamMember" + i + "Name"];
+      if (name) found.push(name + (extracted["teamMember" + i + "Role"] ? " (" + extracted["teamMember" + i + "Role"] + ")" : ""));
+    }
+    if (!found.length) {
+      return "Couldn't find any team members in that document — check the format (a heading per person with a Role and Owns: list works best) or just fill the fields in below.";
+    }
+    return "Found " + found.length + " team member" + (found.length > 1 ? "s" : "") + ": " + found.join(", ") +
+      ". Responsibilities are only filled in where the document actually listed one — review everything below.";
+  }
+
+  function handleTeamFileUpload(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var extracted = parseTeamDoc(String(e.target.result));
+      applyExtractedFields(extracted);
+      syncState();
+      var summaryEl = document.getElementById("teamUploadSummary");
+      summaryEl.textContent = describeTeamExtraction(extracted);
+      summaryEl.hidden = false;
+    };
+    reader.onerror = function () {
+      window.alert("Could not read that file. Try pasting the text instead.");
+    };
+    reader.readAsText(file);
+  }
+
+  function handleTeamPastedText() {
+    var text = document.getElementById("teamDocPasteText").value;
+    if (!text.trim()) {
+      window.alert("Paste some text first.");
+      return;
+    }
+    var extracted = parseTeamDoc(text);
+    applyExtractedFields(extracted);
+    syncState();
+    var summaryEl = document.getElementById("teamUploadSummary");
+    summaryEl.textContent = describeTeamExtraction(extracted);
+    summaryEl.hidden = false;
   }
 
   var EXTRACTABLE_FIELDS = [
@@ -2424,6 +2564,15 @@
     });
     document.getElementById("btnUsePasted").addEventListener("click", handlePastedText);
     document.getElementById("btnSkipUpload").addEventListener("click", nextStep);
+
+    document.getElementById("teamDocUpload").addEventListener("change", function () {
+      handleTeamFileUpload(this.files[0]);
+    });
+    document.getElementById("btnToggleTeamPaste").addEventListener("click", function () {
+      var area = document.getElementById("teamPasteArea");
+      area.hidden = !area.hidden;
+    });
+    document.getElementById("btnUseTeamPasted").addEventListener("click", handleTeamPastedText);
     document.getElementById("btnStepNext").addEventListener("click", nextStep);
     document.getElementById("btnStepBack").addEventListener("click", prevStep);
 
