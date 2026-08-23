@@ -1035,6 +1035,37 @@
       || !!(data && data.personSlides && SLIDE_OWNERS.some(function (who) { return data.personSlides[who] && data.personSlides[who].length; }));
   }
 
+  // A file input can never show a previous selection after a page load (a
+  // browser security restriction, not a bug), and the "Found X fields"
+  // upload summaries only ever appear right after a fresh upload in that
+  // same session. So opening a share link or restoring a browser draft
+  // leaves Step 1/Step 2 looking blank even when the fields underneath are
+  // fully populated — easy to misread as "my upload didn't save." Called
+  // right after applyFormData() to put a persistent reminder back so that
+  // doesn't happen.
+  function showAlreadyFilledNotices() {
+    var briefFilled = ["clientName", "problemSummary", "objective"].some(function (id) {
+      var el = document.getElementById(id);
+      return el && el.value.trim();
+    });
+    if (briefFilled) {
+      var briefEl = document.getElementById("uploadSummary");
+      briefEl.textContent = "This project already has brief-derived fields filled in below (Client, Problem Summary, Objective, etc.) — no need to upload again unless you want to replace them.";
+      briefEl.hidden = false;
+    }
+
+    var teamFilled = false;
+    for (var n = 1; n <= TEAM_MEMBER_COUNT; n++) {
+      var nameEl = document.getElementById("teamMember" + n + "Name");
+      if (nameEl && nameEl.value.trim()) { teamFilled = true; break; }
+    }
+    if (teamFilled) {
+      var teamEl = document.getElementById("teamUploadSummary");
+      teamEl.textContent = "Team names/roles are already filled in below — no need to upload the roster doc again unless you want to replace them.";
+      teamEl.hidden = false;
+    }
+  }
+
   // ---------- logo (kept out of FIELD_IDS since it's binary, not a text input) ----------
 
   var currentLogoDataUrl = "";
@@ -2430,6 +2461,7 @@
           currentPersonSlides[who] = (clean.personSlides && clean.personSlides[who]) || [];
           updatePersonSlidesPreview(who);
         });
+        showAlreadyFilledNotices();
         showShareLink(code);
         syncState();
       })
@@ -2524,6 +2556,7 @@
       currentPersonSlides[who] = (draft.personSlides && draft.personSlides[who]) || [];
       updatePersonSlidesPreview(who);
     });
+    showAlreadyFilledNotices();
     syncState();
     return true;
   }
