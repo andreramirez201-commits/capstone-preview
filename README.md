@@ -16,7 +16,7 @@ into one HTML presentation automatically.
 
 | Step | Whose deliverable | What's in it |
 |---|---|---|
-| 1. Upload Your Document | Whole team | Upload the instructor brief; auto-fills what it can |
+| 1. Upload Your Document | Whole team | Upload the instructor brief (.docx/.txt/.md); auto-fills what it can |
 | 2. Team & Project Basics | Whole team | Team number, 6 names/roles, client, objective, logo |
 | 3. Business Problem | Team Member 3 | Problem summary, key challenges, baseline metrics, current vs. proposed workflow, before/after — plus their slides |
 | 4. AI Solution | Team Member 2 | Solution name/description, the 5 tested prompts — plus their slides |
@@ -55,11 +55,12 @@ instructor. It's not editable back into the form; use Save & Get Link for that.
 - **Team & Project Basics (Step 2)** is where you type in your own 6 names, roles, and
   responsibilities. Team Members 2-6 each own one of the 5 fixed deliverable steps — the hint next
   to each name field says which step.
-- **Upload your team roles & responsibilities doc (Step 2, optional)** and it fills in all 6
-  names, roles, and responsibilities automatically — reads either a heading-per-person doc (a
-  "### Name" heading, a Role line, and an "Owns:" list, like this project's own CONTEXT.md) or a
-  plain "Name — Role" list (like a CLAUDE.md-style team list). Only overwrites what the document
-  actually contains; anything not found is left as-is for you to fill in or edit.
+- **Upload your team roles & responsibilities doc (Step 2, optional; `.docx`, `.txt`, or `.md`)**
+  and it fills in all 6 names, roles, and responsibilities automatically — reads a table (a Team
+  Member/Name column and a Role column, the shape Google Docs/Word export), a heading-per-person
+  doc (a "### Name" heading, a Role line, and an "Owns:" list, like this project's own CONTEXT.md),
+  or a plain "Name — Role" list (like a CLAUDE.md-style team list). Only overwrites what the
+  document actually contains; anything not found is left as-is for you to fill in or edit.
 - **Every deliverable step shows its real owner.** Whatever name is typed into that member's Step 2
   field shows up as the **Owner: [Name]** tag on the matching slide(s) — live, as you type.
 - **Each person's step has its own slide upload.** If someone already built their own slide(s)
@@ -104,8 +105,8 @@ default browser, with everything except Save & Get Link working fully offline.
 ## How to use it
 
 1. Open the link (or `index.html`).
-2. **Step 1 — Upload Your Document.** Upload the instructor's project brief (`.txt` or `.md` works
-   best, or paste the text). No document handy? Click **Skip — I'll fill this in myself**.
+2. **Step 1 — Upload Your Document.** Upload the instructor's project brief (`.docx`, `.txt`, or
+   `.md`, or paste the text). No document handy? Click **Skip — I'll fill this in myself**.
 3. **Step 2 — Team & Project Basics.** Type in your team number, all 6 names, and check the roles —
    edit if your team splits work differently. Or upload your team roles & responsibilities doc to
    fill all 6 in automatically. Fill in your team name, the client, the objective, and a logo
@@ -133,10 +134,12 @@ everything so it can't break the page.
 
 ### About the document upload
 
-Because this is a single self-contained HTML file with no external libraries, no server, and no
-AI API calls, it can only reliably read plain text — `.txt` and `.md` files, or pasted text. It
-cannot parse `.docx` or `.pdf` directly; copy the text out and paste it in instead. It never
-guesses or invents content — only what's actually in the document gets filled in.
+Reads `.docx`, `.txt`, and `.md` files, or pasted text — never guesses or invents content, only
+what's actually in the document gets filled in. `.docx` support loads a small unzip library
+(JSZip) from a CDN, so it needs an internet connection the first time; `.txt`/`.md` uploads and
+pasted text always work fully offline. An older `.doc` (Word 97-2003) file isn't supported — save
+it as `.docx` first. `.pdf` isn't supported either — a PDF's text has no headings/tables left in
+it to read, so copy the text out and paste it in instead.
 
 ### About slide uploads
 

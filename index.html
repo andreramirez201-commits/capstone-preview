@@ -372,8 +372,8 @@
 
         <div class="wizard-step" data-step="0">
           <div class="upload-box">
-            <label class="upload-label" for="docUpload">Upload your project brief <span class="hint">(.txt or .md works best)</span></label>
-            <input type="file" id="docUpload" accept=".txt,.md,.markdown,text/plain,text/markdown">
+            <label class="upload-label" for="docUpload">Upload your project brief <span class="hint">(.docx, .txt, or .md works best)</span></label>
+            <input type="file" id="docUpload" accept=".txt,.md,.markdown,.docx,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
             <button type="button" id="btnTogglePaste" class="btn-secondary btn-small">Or paste the text instead</button>
             <div id="pasteArea" hidden style="width:100%;">
               <label for="docPasteText">Paste your document text</label>
@@ -396,8 +396,8 @@
             <legend title="Who's on the team, their role, and which deliverable step below is theirs.">Team Members</legend>
 
             <div class="upload-box" style="margin-bottom:16px;">
-              <label class="upload-label" for="teamDocUpload">Upload your team roles &amp; responsibilities doc <span class="hint">(.txt or .md — optional)</span></label>
-              <input type="file" id="teamDocUpload" accept=".txt,.md,.markdown,text/plain,text/markdown">
+              <label class="upload-label" for="teamDocUpload">Upload your team roles &amp; responsibilities doc <span class="hint">(.docx, .txt, or .md — optional)</span></label>
+              <input type="file" id="teamDocUpload" accept=".txt,.md,.markdown,.docx,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
               <button type="button" id="btnToggleTeamPaste" class="btn-secondary btn-small">Or paste the text instead</button>
               <div id="teamPasteArea" hidden style="width:100%;">
                 <label for="teamDocPasteText">Paste your team roster text</label>
@@ -834,6 +834,12 @@
      offline. If this fails to load (no internet, blocked), Save & Get Link
      tells the user it's unavailable; everything else keeps working. -->
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<!-- .docx upload support (Step 1's brief, Step 2's team doc). Also
+     CDN-loaded, so — like Save & Get Link above — this needs an internet
+     connection; a .txt/.md upload or paste still works fully offline if
+     it fails to load. -->
+<script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
 
 <script>
 (function () {
@@ -1295,6 +1301,119 @@
     return phrases;
   }
 
+  // ---------- reading .docx uploads ----------
+  //
+  // Every downstream parser (parseBriefText, parseTeamDoc) works off plain
+  // text shaped like markdown — "#" headings, "- " bullets, "| a | b |"
+  // tables. A .docx carries that same structure as real XML (paragraph
+  // styles, numbered/bulleted paragraphs, real tables), so docxBodyToText
+  // re-renders it back into that same markdown-ish shape instead of writing
+  // a second, parallel set of extraction rules.
+
+  function fileExtension(filename) {
+    var m = /\.([a-z0-9]+)$/i.exec(filename || "");
+    return m ? m[1].toLowerCase() : "";
+  }
+
+  function docxBodyToText(xmlString) {
+    var xml = new DOMParser().parseFromString(xmlString, "application/xml");
+    if (xml.getElementsByTagName("parsererror").length) return "";
+    var body = xml.getElementsByTagName("w:body")[0] || xml.documentElement;
+
+    function textOf(el) {
+      var runs = el.getElementsByTagName("w:t");
+      var out = "";
+      for (var i = 0; i < runs.length; i++) out += runs[i].textContent;
+      return out;
+    }
+    function headingLevel(p) {
+      var styles = p.getElementsByTagName("w:pStyle");
+      if (!styles.length) return 0;
+      var val = styles[0].getAttribute("w:val") || "";
+      if (/^title$/i.test(val)) return 1;
+      var m = /Heading(\d)/i.exec(val);
+      return m ? Math.min(6, parseInt(m[1], 10)) : 0;
+    }
+    function isListItem(p) {
+      return p.getElementsByTagName("w:numPr").length > 0;
+    }
+    function tableRows(tbl) {
+      var rows = [];
+      var trs = tbl.getElementsByTagName("w:tr");
+      for (var i = 0; i < trs.length; i++) {
+        var tcs = trs[i].getElementsByTagName("w:tc");
+        var cells = [];
+        for (var j = 0; j < tcs.length; j++) cells.push(textOf(tcs[j]).trim());
+        rows.push(cells);
+      }
+      return rows;
+    }
+
+    var lines = [];
+    var children = body.childNodes;
+    for (var i = 0; i < children.length; i++) {
+      var node = children[i];
+      if (node.nodeType !== 1) continue;
+      if (node.tagName === "w:p") {
+        var text = textOf(node).trim();
+        if (!text) { lines.push(""); continue; }
+        var level = headingLevel(node);
+        if (level) lines.push(new Array(level + 1).join("#") + " " + text);
+        else if (isListItem(node)) lines.push("- " + text);
+        else lines.push(text);
+      } else if (node.tagName === "w:tbl") {
+        tableRows(node).forEach(function (cells, idx) {
+          lines.push("| " + cells.join(" | ") + " |");
+          if (idx === 0) lines.push("| " + cells.map(function () { return "---"; }).join(" | ") + " |");
+        });
+      }
+    }
+    return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  }
+
+  function extractTextFromDocx(file) {
+    return new Promise(function (resolve, reject) {
+      if (typeof JSZip === "undefined") { reject({ code: "lib_unavailable" }); return; }
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        JSZip.loadAsync(e.target.result)
+          .then(function (zip) {
+            var entry = zip.file("word/document.xml");
+            if (!entry) throw { code: "not_docx" };
+            return entry.async("string");
+          })
+          .then(function (xml) { resolve(docxBodyToText(xml)); })
+          .catch(reject);
+      };
+      reader.onerror = function () { reject({ code: "read_failed" }); };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  // Resolves to the file's text regardless of format — .docx goes through
+  // the extractor above, everything else (.txt, .md) reads as plain text
+  // like before.
+  function extractFileText(file) {
+    var ext = fileExtension(file.name);
+    if (ext === "docx") return extractTextFromDocx(file);
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function (e) { resolve(String(e.target.result)); };
+      reader.onerror = function () { reject({ code: "read_failed" }); };
+      reader.readAsText(file);
+    });
+  }
+
+  function describeFileReadError(err, ext) {
+    if (err && err.code === "lib_unavailable") {
+      return "Reading a ." + ext + " file needs an internet connection (to load a small library) — try again once you're online, or paste the text instead.";
+    }
+    if (err && err.code === "not_docx") {
+      return "That doesn't look like a .docx file — an older .doc file isn't supported. Save it as .docx (or .txt/.md) and try again, or paste the text instead.";
+    }
+    return "Could not read that file. Try pasting the text instead.";
+  }
+
   function parseBriefText(text, filename) {
     var result = {};
 
@@ -1556,19 +1675,16 @@
 
   function handleTeamFileUpload(file) {
     if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function (e) {
-      var extracted = parseTeamDoc(String(e.target.result));
+    extractFileText(file).then(function (text) {
+      var extracted = parseTeamDoc(text);
       applyExtractedFields(extracted);
       syncState();
       var summaryEl = document.getElementById("teamUploadSummary");
       summaryEl.textContent = describeTeamExtraction(extracted);
       summaryEl.hidden = false;
-    };
-    reader.onerror = function () {
-      window.alert("Could not read that file. Try pasting the text instead.");
-    };
-    reader.readAsText(file);
+    }).catch(function (err) {
+      window.alert(describeFileReadError(err, fileExtension(file.name)));
+    });
   }
 
   function handleTeamPastedText() {
@@ -2443,14 +2559,11 @@
 
   function handleFileUpload(file) {
     if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function (e) {
-      finishUpload(parseBriefText(String(e.target.result), file.name));
-    };
-    reader.onerror = function () {
-      window.alert("Could not read that file. Try pasting the text instead.");
-    };
-    reader.readAsText(file);
+    extractFileText(file).then(function (text) {
+      finishUpload(parseBriefText(text, file.name));
+    }).catch(function (err) {
+      window.alert(describeFileReadError(err, fileExtension(file.name)));
+    });
   }
 
   function handlePastedText() {
