@@ -179,6 +179,23 @@
     color: var(--ink);
   }
 
+  .brief-reference { margin-bottom: 14px; }
+  .brief-reference-text {
+    margin: 8px 0 0;
+    max-height: 320px;
+    overflow-y: auto;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--ink);
+  }
+
   .btn-help {
     background: none;
     border: none;
@@ -361,6 +378,11 @@
         <strong>Your link — anyone who opens it can view and continue this project:</strong>
         <input type="text" id="shareLinkUrl" readonly style="width:100%;margin-top:6px;">
         <button type="button" id="btnCopyLink" class="btn-secondary btn-small" style="margin-top:6px;">Copy Link</button>
+      </div>
+
+      <div id="briefReferenceBox" class="brief-reference" hidden>
+        <button type="button" id="btnToggleBriefReference" class="btn-secondary btn-small">View Original Brief</button>
+        <pre id="briefReferenceText" class="brief-reference-text" hidden></pre>
       </div>
 
       <p class="step-progress-label" id="stepProgressLabel"></p>
@@ -1095,6 +1117,25 @@
     syncState();
   }
 
+  // ---------- brief reference (kept out of FIELD_IDS since it's the raw
+  // source text, not a form field — a persistent, collapsible way to reread
+  // the uploaded/pasted brief while working on any step, not just Step 1) ----------
+
+  var MAX_BRIEF_REFERENCE_CHARS = 300000;
+  var currentBriefRawText = "";
+
+  function updateBriefReferenceBox() {
+    var box = document.getElementById("briefReferenceBox");
+    var text = document.getElementById("briefReferenceText");
+    box.hidden = !currentBriefRawText;
+    text.textContent = currentBriefRawText;
+  }
+
+  function setBriefRawText(text) {
+    currentBriefRawText = (text || "").slice(0, MAX_BRIEF_REFERENCE_CHARS);
+    updateBriefReferenceBox();
+  }
+
   var MAX_LOGO_BYTES = 3 * 1024 * 1024;
 
   function handleLogoUpload(file) {
@@ -1224,6 +1265,7 @@
   function collectAllData() {
     var data = collectFormData();
     data.logoDataUrl = currentLogoDataUrl;
+    data.briefRawText = currentBriefRawText;
     data.personSlides = {};
     SLIDE_OWNERS.forEach(function (who) { data.personSlides[who] = currentPersonSlides[who].slice(); });
     return data;
@@ -1241,6 +1283,7 @@
       data[id] = typeof v === "string" ? v : "";
     });
     data.logoDataUrl = isValidImageDataUrl(parsed.logoDataUrl) ? parsed.logoDataUrl : "";
+    data.briefRawText = typeof parsed.briefRawText === "string" ? parsed.briefRawText.slice(0, MAX_BRIEF_REFERENCE_CHARS) : "";
     data.personSlides = {};
     SLIDE_OWNERS.forEach(function (who) {
       var arr = parsed.personSlides && Array.isArray(parsed.personSlides[who]) ? parsed.personSlides[who] : [];
@@ -2421,6 +2464,7 @@
         var payload = {};
         FIELD_IDS.forEach(function (id) { payload[id] = data[id]; });
         payload.logoDataUrl = images.logoDataUrl;
+        payload.briefRawText = data.briefRawText;
         payload.personSlides = images.personSlides;
         return client.rpc("save_capstone_project", { p_code: code, p_data: payload });
       })
@@ -2457,6 +2501,7 @@
         applyFormData(clean);
         currentLogoDataUrl = clean.logoDataUrl || "";
         updateLogoPreview();
+        setBriefRawText(clean.briefRawText || "");
         SLIDE_OWNERS.forEach(function (who) {
           currentPersonSlides[who] = (clean.personSlides && clean.personSlides[who]) || [];
           updatePersonSlidesPreview(who);
@@ -2480,13 +2525,16 @@
     currentQuestionsByField = {};
     document.getElementById("logoUpload").value = "";
     updateLogoPreview();
+    setBriefRawText("");
     SLIDE_OWNERS.forEach(function (who) {
       currentPersonSlides[who] = [];
       document.getElementById("slideImagesUpload_" + who).value = "";
       updatePersonSlidesPreview(who);
     });
     document.getElementById("uploadSummary").hidden = true;
+    document.getElementById("teamUploadSummary").hidden = true;
     document.getElementById("docPasteText").value = "";
+    document.getElementById("teamDocPasteText").value = "";
     renderPreview();
     showStep(0);
   }
@@ -2552,6 +2600,7 @@
     applyFormData(draft);
     currentLogoDataUrl = draft.logoDataUrl || "";
     updateLogoPreview();
+    setBriefRawText(draft.briefRawText || "");
     SLIDE_OWNERS.forEach(function (who) {
       currentPersonSlides[who] = (draft.personSlides && draft.personSlides[who]) || [];
       updatePersonSlidesPreview(who);
@@ -2580,9 +2629,10 @@
 
   // ---------- upload step ----------
 
-  function finishUpload(extracted) {
+  function finishUpload(extracted, rawText) {
     applyExtractedFields(extracted);
     currentQuestionsByField = mapQuestionsToFields(extracted.instructorQuestions);
+    setBriefRawText(rawText);
     syncState();
     var summaryEl = document.getElementById("uploadSummary");
     summaryEl.textContent = describeExtraction(extracted);
@@ -2592,7 +2642,7 @@
   function handleFileUpload(file) {
     if (!file) return;
     extractFileText(file).then(function (text) {
-      finishUpload(parseBriefText(text, file.name));
+      finishUpload(parseBriefText(text, file.name), text);
     }).catch(function (err) {
       window.alert(describeFileReadError(err, fileExtension(file.name)));
     });
@@ -2604,7 +2654,7 @@
       window.alert("Paste some text first.");
       return;
     }
-    finishUpload(parseBriefText(text, ""));
+    finishUpload(parseBriefText(text, ""), text);
   }
 
   // ---------- wizard navigation ----------
@@ -2769,6 +2819,11 @@
     });
     document.getElementById("btnUsePasted").addEventListener("click", handlePastedText);
     document.getElementById("btnSkipUpload").addEventListener("click", nextStep);
+    document.getElementById("btnToggleBriefReference").addEventListener("click", function () {
+      var text = document.getElementById("briefReferenceText");
+      text.hidden = !text.hidden;
+      this.textContent = text.hidden ? "View Original Brief" : "Hide Original Brief";
+    });
 
     document.getElementById("teamDocUpload").addEventListener("change", function () {
       handleTeamFileUpload(this.files[0]);
