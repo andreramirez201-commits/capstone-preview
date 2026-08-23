@@ -2287,7 +2287,6 @@
 
   var SUPABASE_URL = "https://lhmllzbzysqrjezhqpey.supabase.co";
   var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxobWxsemJ6eXNxcmplemhxcGV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczMzgwOTMsImV4cCI6MjEwMjkxNDA5M30.yuxLAuvICuQkvBn9s1KCfyklzrIFAAk4DHL0Ge-S3rQ";
-  var SUPABASE_TABLE = "capstone_projects";
   var SUPABASE_BUCKET = "capstone-slides";
 
   var supabaseClient = null;
@@ -2392,7 +2391,7 @@
         FIELD_IDS.forEach(function (id) { payload[id] = data[id]; });
         payload.logoDataUrl = images.logoDataUrl;
         payload.personSlides = images.personSlides;
-        return client.from(SUPABASE_TABLE).upsert({ code: code, data: payload, updated_at: new Date().toISOString() });
+        return client.rpc("save_capstone_project", { p_code: code, p_data: payload });
       })
       .then(function (res) {
         if (res.error) throw res.error;
@@ -2413,13 +2412,13 @@
       window.alert("Can't reach the saved project right now (no internet, or the save library didn't load). Try refreshing the page.");
       return;
     }
-    client.from(SUPABASE_TABLE).select("data").eq("code", code).maybeSingle()
+    client.rpc("load_capstone_project", { p_code: code })
       .then(function (res) {
         if (res.error || !res.data) {
           window.alert("Couldn't find a saved project for that link.");
           return;
         }
-        var clean = sanitizeImportedData(res.data.data);
+        var clean = sanitizeImportedData(res.data);
         if (!clean) {
           window.alert("That saved project doesn't have any recognizable data.");
           return;
