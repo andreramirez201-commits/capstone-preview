@@ -1679,16 +1679,19 @@
     return result;
   }
 
-  // 7 fixed sample company briefs a team can pick instead of uploading one —
-  // the same scenarios (name, objective, real numbers) already used as the
-  // preset dropdown in the sibling Project Preview Generator, reshaped into
-  // this app's own fixed field set (problemSummary, baselineMetrics,
-  // beforeAfter, ...) rather than that app's generic per-project "Item N"
-  // fields, since here every field's meaning is fixed regardless of which
-  // brief is picked. Only fields a real brief of this shape would actually
-  // state are filled in — teamNumber and risksSafeguards are left for the
-  // team to fill themselves, same as a real upload with no "must address:"
-  // section would leave them.
+  // 7 fixed sample company briefs a team can pick instead of uploading one.
+  // Unlike the sibling Project Preview Generator (whose deliverable slots
+  // and item counts are generic and get relabeled per project), this app's
+  // rubric is fixed — 5 tested prompts, a sample proposal, a 3-message
+  // follow-up sequence, a specific testing/measurement split, a 90-day
+  // phased plan — so a preset here is a COMPLETE worked example against
+  // that same fixed rubric, not just brief-extraction. Only clientName,
+  // objective, problemSummary, baselineMetrics, and the Before: half of
+  // beforeAfter are things a real instructor brief would actually state;
+  // everything else here (solution, prompts, proposal, testing, rollout) is
+  // example team work, clearly labeled as such in the summary message shown
+  // after picking one — a team must replace it with their own, not submit
+  // it as-is.
   var PRESET_BRIEFS = {
     meridian: {
       name: "Meridian Consulting Group — Sales Proposal & Client Communication Enhancement",
@@ -1696,8 +1699,41 @@
         clientName: "Meridian Consulting Group",
         objective: "Design and prototype an AI-powered sales enablement system that cuts proposal drafting time by 50%, standardizes compelling client-specific proposal language, and reduces follow-up response time to under 24 hours.",
         problemSummary: "Meridian's sales team is losing deals not because of weak expertise, but because proposals take too long to produce and client follow-up is inconsistent. As the pipeline has grown, the eight-person sales team has been unable to keep writing quality and response speed at the level clients expect.",
+        keyChallenges: "Reps rebuild every proposal from scratch instead of working from a shared template or library.\nFollow-up after a proposal is sent is inconsistent and often forgotten once a rep moves to the next deal.\nThere is no consistent way to check a proposal's tone and accuracy before it goes to a client.",
         baselineMetrics: "An average proposal takes 14 hours to draft from scratch\nProposal win rate has dropped from 32% to 24% over the past year\n35% of leads go more than 5 days without a follow-up email\nSales team spends approximately 40% of its time writing rather than selling",
-        beforeAfter: "Before: 14 hours to draft a proposal\nAfter: "
+        currentWorkflow: "Sales Conversation -> Manual Notes -> Manual Proposal Drafting -> Internal Review -> Proposal Sent -> Manual Follow-Up",
+        workflow: "Sales Notes -> AI Opportunity Brief -> AI Proposal Draft -> Human Quality Check -> Proposal Sent -> AI-Assisted Follow-Up Sequence",
+        beforeAfter: "Before: 14 hours to draft a proposal\nAfter: ",
+        solutionName: "AI-Assisted Sales Communication Workflow",
+        solutionDescription: "An AI-assisted workflow that turns raw sales notes into a structured opportunity brief, drafts the proposal and follow-up messages from that brief, and always routes through a human reviewer before anything reaches a client. We are not replacing the salesperson — we are removing the blank page.",
+        prompt1Purpose: "Sales Notes -> Opportunity Brief",
+        prompt1Text: "Summarize these raw sales call notes into a structured opportunity brief: client name, industry, stated pain points, budget signals if mentioned, and the client's stated timeline. Do not invent any detail not present in the notes.",
+        prompt2Purpose: "Opportunity Brief -> Proposal Draft",
+        prompt2Text: "Using this opportunity brief, draft a consulting proposal in Meridian's voice: problem summary, proposed approach, timeline, and pricing placeholder. Keep it under 400 words and do not commit to a delivery date not already implied by the brief.",
+        prompt3Purpose: "Proposal Quality Review",
+        prompt3Text: "Review this draft proposal for overstated claims, invented commitments, or tone that doesn't match a professional B2B consulting firm. List every issue found, then suggest a fix for each.",
+        prompt4Purpose: "Follow-Up Sequence",
+        prompt4Text: "Write a 3-message follow-up sequence for a prospect who has gone quiet after receiving this proposal: an initial check-in, a value reminder, and a final low-pressure close. Keep each message under 80 words.",
+        prompt5Purpose: "Objection Handling",
+        prompt5Text: "The prospect replied that the price is higher than a competitor's quote. Draft a response that addresses the objection without discounting, by reinforcing the specific value in the proposal above.",
+        sampleProposal: "Dear Alex,\n\nThank you for walking us through where proposal drafting and client follow-up are slowing your team down. Based on what we discussed, here is our recommended next step: a 30-day pilot of an AI-assisted workflow that drafts proposals from your reps' own call notes and keeps every lead on a consistent follow-up cadence, with a human reviewing every message before it goes out.\n\nWe estimate this cuts proposal drafting time from roughly 14 hours to under an hour of review, and closes the follow-up gap that is currently costing you leads after 5+ days of silence.\n\nNext step: a 30-minute call to confirm scope and pick your pilot team.",
+        followUpMessage1: "Hi Alex — following up on the proposal we sent last week. Happy to answer any questions before your team reviews it internally.",
+        followUpMessage2: "Hi Alex — wanted to flag one thing we didn't cover in the proposal: the pilot is scoped to run alongside your existing process, so there's no disruption to deals already in flight. Let me know if that changes your read on timing.",
+        followUpMessage3: "Hi Alex — I'll close this out on our end for now, but the door's open whenever the timing works better. Let me know if anything changes.",
+        proposalQualityReview: "The first AI draft overstated our delivery timeline ('results within one week') — tightened to match what we can actually commit to in a 30-day pilot. Tone read as slightly too casual for a first proposal to a new client; adjusted to match Meridian's more formal house voice. No factual claims were invented that weren't already in the sales notes.",
+        risksSafeguards: "Accuracy: every AI-drafted proposal is checked against the original sales notes before sending, so nothing invented reaches a client.\nOverpromising: reps sign off on any timeline or pricing commitment before it goes out.\nConfidentiality: no client names or deal details are entered into a public AI tool without an enterprise data agreement.\nTransparency: clients are not told a proposal was AI-drafted unless they ask, since the content is still reviewed and owned by the rep.\nHuman approval: nothing is sent to a client without the assigned rep's sign-off.",
+        humanReview: "Every AI-drafted proposal and follow-up message is reviewed by the assigned salesperson for accuracy, tone, and pricing before it is sent. Nothing reaches a client without that approval — AI drafts, humans decide.",
+        testingCriteria: "Accuracy: did the draft stay within the facts in the original sales notes\nTone: does it match Meridian's professional voice\nPersonalization: does it reflect this specific client's stated pain points\nHuman editing required: how much rewriting before it was client-ready",
+        testingNotes: "Tested all 5 prompts against a consistent fictional Meridian opportunity (a mid-market logistics client). Prompt 2's first draft invented a delivery date the notes never mentioned — added an explicit 'do not invent commitments not stated in the brief' instruction and retested; the revised draft correctly left the timeline open pending internal review.",
+        successMeasures: "Proposal drafting time\nLead follow-up response time\nProposal win rate",
+        implementPilot: "Pilot with 2-3 reps for 30 days, drafting every new proposal and follow-up through the AI-assisted workflow. Track drafting time and follow-up response time against the 14-hour/5-day baseline.",
+        implementTraining: "Train pilot reps on the workflow, the required human-review step, and the responsible-AI rules (no client data in a public tool, no sending without sign-off) before day one.",
+        implementHandoff: "Every AI-drafted proposal and follow-up message still requires the assigned rep's sign-off before sending — this does not change during or after the pilot.",
+        implementAdoptionRisks: "Reps may distrust an AI-drafted proposal at first, or feel it doesn't sound like them. Mitigate by allowing edits before every send and sharing early wins from the pilot group.",
+        implementFeedback: "Collect weekly feedback from the pilot group on draft quality and how much editing each proposal needed before it was client-ready.",
+        implementImprove: "After 30 days, compare drafting time and follow-up response time against baseline. Review pilot feedback and how much manual editing was typically required. Refine the prompts based on the most common edits reps made.",
+        implementScale: "Recommend scaling to the full sales team if drafting time and follow-up time both improved without a drop in proposal win rate, and the pilot group actually used the workflow consistently. Otherwise, extend the pilot and keep iterating on the prompts.",
+        nextSteps: "Meridian should pilot the AI-assisted workflow with 2-3 reps before a full team rollout.\nDo not present untested drafting-time or win-rate targets as already-achieved results."
       },
       rawText: "Meridian Consulting Group — a 60-person B2B management consulting firm based in Chicago, serving mid-market manufacturing and logistics clients.\n\nBusiness Challenge: Meridian's sales team is losing deals not because of weak expertise, but because proposals take too long to produce and client follow-up is inconsistent. As the pipeline has grown, the eight-person sales team has been unable to keep writing quality and response speed at the level clients expect.\n\nCurrent State of Sales Communication:\n- An average proposal takes 14 hours to draft from scratch\n- Proposal win rate has dropped from 32% to 24% over the past year\n- 35% of leads go more than 5 days without a follow-up email\n- There is no standardized proposal template or messaging library\n- The sales team spends approximately 40% of its time writing rather than selling\n\nProject Objectives: Design and prototype an AI-powered sales enablement system that cuts proposal drafting time by 50%, standardizes compelling client-specific proposal language, and reduces follow-up response time to under 24 hours."
     },
@@ -1707,8 +1743,41 @@
         clientName: "GreenLeaf Home Services",
         objective: "Design and implement an AI-enhanced customer support workflow that reduces initial response time by 50%, improves request categorization accuracy, provides 24/7 initial support capabilities, and maintains a personalized customer experience.",
         problemSummary: "GreenLeaf's rapid growth over the past five years has outpaced the capacity of its customer support infrastructure. The company currently operates with a nine-person support team working two overlapping shifts to cover inquiries from 7:00 AM to 9:00 PM MST, seven days a week.",
+        keyChallenges: "The team manually categorizes and routes every inquiry with no automated triage.\nAfter-hours inquiries only get a callback the next morning, creating a growing backlog.\nRepeat contacts from customers following up on unanswered requests add extra volume on top of new inquiries.",
         baselineMetrics: "Response time averages 4-6 hours across all channels, well above the 1-hour industry benchmark\nCustomer satisfaction (CSAT) scores have declined from 4.2 to 3.7 stars over the past 12 months\nAfter-hours callback queue regularly exceeds 40 messages\nApproximately 18% of daily inquiries are repeat contacts from unanswered requests",
-        beforeAfter: "Before: 4-6 hours average response time\nAfter: "
+        currentWorkflow: "Customer Inquiry -> Manual Triage -> Manual Routing to Rep -> Manual Response -> Manual Follow-Up if Unanswered",
+        workflow: "Customer Inquiry -> AI Triage & Categorization -> AI Draft Response -> Human Review -> Response Sent -> AI-Assisted Follow-Up if Unresolved",
+        beforeAfter: "Before: 4-6 hours average response time\nAfter: ",
+        solutionName: "AI-Assisted Customer Support Triage",
+        solutionDescription: "An AI-assisted workflow that reads each inbound inquiry, categorizes it, and drafts a first response a support rep can review and send in seconds instead of minutes. It also covers after-hours inquiries with an initial AI response so nothing sits untouched until morning. A rep is still the one who sends anything to a customer.",
+        prompt1Purpose: "Inquiry -> Category & Priority",
+        prompt1Text: "Read this customer inquiry and categorize it (billing, scheduling, service issue, general question) and flag its priority (urgent, standard, low). Do not draft a response yet — just categorize and explain why.",
+        prompt2Purpose: "Category -> Draft Response",
+        prompt2Text: "Using this categorized inquiry, draft a first response in GreenLeaf's friendly, plain-language customer voice. If the inquiry needs information we don't have (like an account number), ask for it instead of guessing.",
+        prompt3Purpose: "Response Quality Review",
+        prompt3Text: "Review this draft customer response for anything that sounds like a commitment GreenLeaf can't actually guarantee (an exact arrival time, a guaranteed fix), or a tone that reads as robotic instead of friendly. List each issue and a fix.",
+        prompt4Purpose: "After-Hours Acknowledgment",
+        prompt4Text: "Draft a short after-hours acknowledgment message for this inquiry that confirms it was received, sets an expectation for when a person will follow up, and avoids promising a specific resolution.",
+        prompt5Purpose: "Unresolved Follow-Up",
+        prompt5Text: "This inquiry was marked resolved 3 days ago with no reply from the customer confirming it worked. Draft a short, low-pressure follow-up checking whether the issue actually got resolved.",
+        sampleProposal: "Hi Jordan,\n\nThanks for reaching out about your delayed service appointment. I can see the scheduling conflict on our end — I've moved your appointment to Thursday at 10 AM and flagged your account so this doesn't happen again.\n\nIf Thursday doesn't work, just reply here and I'll find another time that does.",
+        followUpMessage1: "Hi Jordan — just confirming your Thursday 10 AM appointment is still good on your end.",
+        followUpMessage2: "Hi Jordan — wanted to check in after Thursday's appointment. Did everything get resolved?",
+        followUpMessage3: "Hi Jordan — closing this out on our end, but reach back out anytime if anything comes up again.",
+        proposalQualityReview: "The first AI draft promised a specific technician arrival window we can't actually guarantee — removed the specific time and replaced it with the confirmed appointment slot only. Tone read as slightly too formal for GreenLeaf's usual friendly style; loosened the language to match.",
+        risksSafeguards: "Accuracy: a rep verifies any account or scheduling detail before it's sent, since the AI doesn't have live access to the scheduling system.\nOverpromising: no AI-drafted response commits to a specific arrival time or guaranteed outcome.\nConfidentiality: customer account numbers and addresses are handled per GreenLeaf's existing privacy policy, not pasted into a public AI tool.\nTransparency: customers aren't told a first draft was AI-assisted, since a human reviews and owns every reply.\nHuman approval: no response reaches a customer without a rep reading it first.",
+        humanReview: "Every AI-drafted response is reviewed by a support rep before it's sent — the rep checks it against real account details and edits anything that doesn't fit. Nothing is auto-sent to a customer.",
+        testingCriteria: "Accuracy: did it invent a scheduling or account detail it didn't have\nTone: does it match GreenLeaf's friendly, plain-language voice\nCompleteness: did it correctly ask for missing information instead of guessing\nHuman editing required: how much rewriting before it was ready to send",
+        testingNotes: "Tested all 5 prompts against 10 real-shaped fictional inquiries covering billing, scheduling, and service issues. The categorization prompt (Prompt 1) was consistently accurate; the response draft (Prompt 2) occasionally invented a specific arrival time when the customer asked 'when will someone arrive' — added an explicit instruction not to commit to a time not already confirmed, and retested with correct results.",
+        successMeasures: "Average response time\nAfter-hours acknowledgment rate\nCustomer satisfaction (CSAT) score",
+        implementPilot: "Pilot with 2-3 support reps for 30 days on inbound email inquiries only (not phone). Track response time and CSAT against the 4-6 hour baseline.",
+        implementTraining: "Train pilot reps on reviewing and editing AI-drafted responses, and on the rule that no scheduling or account commitment goes out unverified.",
+        implementHandoff: "A rep reviews and sends every response — the AI never sends directly to a customer, during the pilot or after.",
+        implementAdoptionRisks: "Reps may find reviewing a draft slower than just answering directly at first. Mitigate by starting with the highest-volume, most repetitive inquiry types where the draft saves the most time.",
+        implementFeedback: "Collect weekly feedback from pilot reps on how often a draft needed heavy editing versus a quick send.",
+        implementImprove: "After 30 days, compare response time and CSAT against baseline. Refine the response-drafting prompt based on the most common edits reps made.",
+        implementScale: "Recommend scaling to the full support team if response time improves without a drop in CSAT, and reps report the drafts are genuinely saving time rather than adding a review step. Otherwise, narrow the pilot to fewer inquiry types and keep iterating.",
+        nextSteps: "GreenLeaf should pilot the AI-assisted triage and response workflow on email inquiries before expanding to phone.\nDo not present untested response-time targets as already-achieved results."
       },
       rawText: "GreenLeaf Home Services — a regional home maintenance and repair company with 150 employees serving residential customers in Colorado.\n\nBusiness Challenge: GreenLeaf's rapid growth over the past five years has outpaced the capacity of its customer support infrastructure. The company currently operates with a nine-person support team working two overlapping shifts to cover inquiries from 7:00 AM to 9:00 PM MST, seven days a week. Despite the team's dedication, the volume and variety of requests have created persistent operational bottlenecks.\n\nCurrent State of Customer Support:\n- Response time averages 4-6 hours across all channels, well above the 1-hour industry benchmark for home services\n- Customer satisfaction (CSAT) scores have declined from 4.2 to 3.7 stars over the past 12 months\n- The team manually categorizes and routes every inquiry — there is no automated triage system\n- After-hours inquiries (9:00 PM - 7:00 AM) are handled by voicemail and email only, with a next-morning callback queue that regularly exceeds 40 messages\n- Approximately 18% of daily inquiries are repeat contacts from customers following up on unanswered requests\n\nProject Objectives: Design and implement an AI-enhanced customer support workflow that reduces initial response time by 50%, improves request categorization accuracy, provides 24/7 initial support capabilities, and maintains a personalized customer experience."
     },
@@ -1718,8 +1787,41 @@
         clientName: "BrightPath Technologies",
         objective: "Design and prototype an AI enhanced recruiting and onboarding workflow that reduces resume screening time by 70%, standardizes onboarding materials by role and department, improves time-to-hire by 30%, and maintains fair, unbiased, and legally compliant hiring practices.",
         problemSummary: "BrightPath has grown from 40 to 90 employees in eighteen months and plans to add 30 more roles this year. The HR team, a lean two-person function, is struggling to keep pace with the volume of applications and the demands of getting new hires up to speed quickly.",
+        keyChallenges: "HR manually reviews roughly 200 resumes for every open role with no automated pre-screening.\nOnboarding materials are inconsistent and vary widely by department, so new hires get an uneven experience.\nManagers spend 3 full days per hire in one-on-one onboarding time that could be partly self-serve.",
         baselineMetrics: "Average time-to-hire is 47 days, well above the company's 30-day target\nHR manually reviews roughly 200 resumes for every open role\nNew hire onboarding consumes 3 full days of one-on-one time from managers per hire\n22% of new hires report feeling unprepared after their first week",
-        beforeAfter: "Before: 47 days average time-to-hire\nAfter: "
+        currentWorkflow: "Job Posted -> Manual Resume Review -> Phone Screen -> Interviews -> Offer -> Manual Onboarding Walkthrough",
+        workflow: "Job Posted -> AI Resume Screening -> Human Shortlist Review -> Interviews -> Offer -> AI-Assisted Onboarding Guide + Human Walkthrough",
+        beforeAfter: "Before: 47 days average time-to-hire\nAfter: ",
+        solutionName: "AI-Assisted Screening & Onboarding Toolkit",
+        solutionDescription: "An AI-assisted workflow that pre-screens resumes against a role's stated requirements and flags a shortlist for HR to review, then generates a first draft of role-specific onboarding materials so managers spend their time on judgment calls and relationship-building, not repetitive paperwork. HR makes every hiring decision — the AI never does.",
+        prompt1Purpose: "Resume -> Screening Summary",
+        prompt1Text: "Compare this resume against the stated requirements for this role and summarize how well it matches: which requirements are clearly met, which are unclear, and which are missing. Do not make a hire/no-hire recommendation.",
+        prompt2Purpose: "Screening Summary -> Interview Questions",
+        prompt2Text: "Based on this screening summary, draft 5 interview questions that probe the areas marked unclear or missing, without asking about anything protected (age, family status, disability, etc.).",
+        prompt3Purpose: "Screening Output Quality Review",
+        prompt3Text: "Review this AI screening summary for any language that implies bias based on a protected characteristic, or any conclusion not actually supported by the resume text. List each issue found.",
+        prompt4Purpose: "Role -> Onboarding Outline",
+        prompt4Text: "Draft a first-week onboarding outline for this role: what the new hire should learn, who they should meet, and what their first task should be. Keep it to one page.",
+        prompt5Purpose: "Onboarding FAQ",
+        prompt5Text: "Based on this onboarding outline, draft 5 FAQs a new hire in this role would likely have in their first week, with plain-language answers.",
+        sampleProposal: "Hi Priya,\n\nBased on the requirements for the Senior Developer role, here's our screening summary for this candidate: strong match on required languages and years of experience; unclear whether they've worked in a regulated industry, which the role requires — recommend asking about this directly in the phone screen.\n\nSuggested next step: move to phone screen with the attached interview questions.",
+        followUpMessage1: "Hi Priya — following up to confirm the phone screen for this candidate is still on your calendar for this week.",
+        followUpMessage2: "Hi Priya — wanted to flag that this candidate's screening summary noted an unclear match on the regulated-industry requirement — worth a direct question in the screen.",
+        followUpMessage3: "Hi Priya — closing the loop on this candidate for now. Let me know how the screen went whenever you get a chance.",
+        proposalQualityReview: "The first AI screening draft implied a recommendation ('this candidate seems like a strong hire') that goes beyond what a screening summary should say — reworded to stick to factual requirement matching only, with the hire/no-hire call left entirely to HR.",
+        risksSafeguards: "Accuracy: HR verifies every screening summary against the actual resume before acting on it.\nBias: screening summaries are checked for language that implies a judgment based on a protected characteristic before use.\nOverpromising: the AI never issues a hire/no-hire recommendation — only a requirements-match summary.\nConfidentiality: candidate resumes and personal data stay inside BrightPath's existing ATS, not a public AI tool.\nHuman approval: every hiring decision is made by HR and the hiring manager, never by the AI.",
+        humanReview: "HR reviews every AI-generated screening summary and onboarding draft before it's used. The AI never makes a hiring decision or sends anything directly to a candidate.",
+        testingCriteria: "Accuracy: did the summary only state what's actually in the resume\nBias: did it avoid language tied to a protected characteristic\nUsefulness: did the interview questions actually target the unclear areas\nHuman editing required: how much rewriting before HR could use it",
+        testingNotes: "Tested all 5 prompts against 10 fictional resumes for the same role. The screening prompt occasionally drifted into an implied recommendation rather than a neutral summary — added an explicit instruction to state matches/gaps only, no recommendation, and retested with correct results.",
+        successMeasures: "Time-to-hire\nHR hours spent per hire on manual resume review\nNew hire first-week readiness (pulse survey)",
+        implementPilot: "Pilot on 2-3 open roles for 30 days, running every incoming resume through the AI screening step before HR's manual review. Track time-to-hire and HR hours saved against the 47-day/200-resume baseline.",
+        implementTraining: "Train HR and hiring managers on reading a screening summary as a starting point, not a verdict, and on the responsible-AI rules around bias-checking and confidentiality.",
+        implementHandoff: "HR makes every shortlist and hiring decision — the AI's screening summary is an input, never the final word.",
+        implementAdoptionRisks: "HR may distrust an AI-generated summary on a decision this consequential. Mitigate by having HR spot-check summaries against resumes early on and sharing accuracy results from the pilot.",
+        implementFeedback: "Collect weekly feedback from HR on how often a screening summary needed correction and whether it actually saved review time.",
+        implementImprove: "After 30 days, compare time-to-hire and HR hours against baseline. Refine the screening prompt based on any bias or accuracy issues found.",
+        implementScale: "Recommend scaling to all open roles if time-to-hire and HR hours both improve without HR losing confidence in the screening summaries. Otherwise, keep the pilot narrow and keep iterating.",
+        nextSteps: "BrightPath should pilot AI-assisted screening on 2-3 roles before rolling out company-wide.\nDo not present untested time-to-hire targets as already-achieved results."
       },
       rawText: "BrightPath Technologies — a fast-growing SaaS startup with 90 employees, headquartered in Austin, Texas, building project-management software for construction firms.\n\nBusiness Challenge: BrightPath has grown from 40 to 90 employees in eighteen months and plans to add 30 more roles this year. The HR team, a lean two person function, is struggling to keep pace with the volume of applications and the demands of getting new hires up to speed quickly.\n\nCurrent State of Hiring & Onboarding:\n- Average time-to-hire is 47 days, well above the company's 30-day target\n- HR manually reviews roughly 200 resumes for every open role\n- New hire onboarding consumes 3 full days of one-on-one time from managers per hire\n- Onboarding materials are inconsistent and vary widely by department\n- 22% of new hires report feeling unprepared after their first week, based on recent pulse surveys\n\nProject Objectives: Design and prototype an AI enhanced recruiting and onboarding workflow that reduces resume screening time by 70%, standardizes onboarding materials by role and department, improves time-to-hire by 30%, and maintains fair, unbiased, and legally compliant hiring practices."
     },
@@ -1729,7 +1831,40 @@
         clientName: "Summit Outdoor Gear",
         objective: "Create an AI-powered content creation system that increases content output by 200% without additional headcount, maintains brand voice consistency, improves SEO performance, and reduces content creation time per piece by 60%.",
         problemSummary: "Summit's marketing team currently produces 8-10 blog posts, 20 social media posts, and 4 email campaigns monthly. Competitors are publishing roughly 3x more content and ranking higher in search results. The 3-person marketing team is overwhelmed, leading to inconsistent posting schedules and missed opportunities during peak seasons.",
-        baselineMetrics: "8-10 blog posts, 20 social posts, and 4 email campaigns produced monthly\nCompetitors publish roughly 3x more content\nA 3-person team covers all content production"
+        keyChallenges: "The 3-person marketing team can't keep pace with a posting schedule that competitors publish 3x more content against.\nContent quality is inconsistent when the team rushes to hit a deadline.\nThere's no reusable system for adapting one piece of content into multiple formats (blog, social, email).",
+        baselineMetrics: "8-10 blog posts, 20 social posts, and 4 email campaigns produced monthly\nCompetitors publish roughly 3x more content\nA 3-person team covers all content production",
+        currentWorkflow: "Content Idea -> Manual Research -> Manual Draft -> Manual Edit -> Publish",
+        workflow: "Content Idea -> AI Research Summary -> AI First Draft -> Human Edit for Brand Voice -> Publish",
+        solutionName: "AI-Assisted Content Production System",
+        solutionDescription: "An AI-assisted workflow that turns one content idea into a first draft across formats — blog post, social captions, and an email — so the team edits for brand voice instead of writing everything from a blank page. The team still decides what to publish and owns the final voice.",
+        prompt1Purpose: "Topic -> Blog Post Draft",
+        prompt1Text: "Write an 800-word blog post draft for Summit Outdoor Gear on this topic, in an approachable, outdoorsy brand voice. Include a clear intro, 3 subheadings, and a closing call-to-action. Do not invent product specs or prices.",
+        prompt2Purpose: "Blog Post -> Social Captions",
+        prompt2Text: "Turn this blog post into 4 social media captions (one for Instagram, one for Facebook, two for a thread on X), each under 280 characters, matching Summit's brand voice.",
+        prompt3Purpose: "Blog Post -> Email Snippet",
+        prompt3Text: "Write a 3-sentence email teaser for this blog post that would go in Summit's weekly newsletter, ending with a link placeholder.",
+        prompt4Purpose: "Brand Voice Quality Review",
+        prompt4Text: "Review this draft against Summit's brand voice (approachable, outdoorsy, never overly corporate) and flag any sentence that reads as generic AI copy or off-brand.",
+        prompt5Purpose: "Product Description",
+        prompt5Text: "Write a 60-word product description for this item, in Summit's brand voice, based only on the specs and features listed below. Do not invent a spec that isn't listed.",
+        sampleProposal: "Draft Blog Intro — 'Your First Overnight Backpacking Trip: What Actually Matters'\n\nYou don't need the lightest pack on the trail or the most expensive tent to have a great first overnight trip — you need the right basics, packed the right way. Here's what we'd tell a friend before their first night outside.",
+        followUpMessage1: "Draft note to the marketing lead: here's this week's blog draft — flagging the intro and CTA for a quick brand-voice check before we schedule it.",
+        followUpMessage2: "Draft note to the marketing lead: made the tone edits you flagged last week — ready for a final look before publish.",
+        followUpMessage3: "Draft note to the marketing lead: this one's ready to go live whenever you give the go-ahead.",
+        proposalQualityReview: "The first AI blog draft used a generic, overly formal opening ('In today's world, outdoor enthusiasts...') that doesn't match Summit's more casual voice — rewrote the opening to sound like a person talking to a friend. No product specs were invented, but one draft implied a price point that wasn't provided — removed.",
+        risksSafeguards: "Accuracy: no AI-drafted product description states a spec or price that wasn't explicitly provided.\nBrand voice: every draft is edited by a human for tone before publishing, since AI-generated copy tends to read generically otherwise.\nOverpromising: no content claims a product performs better than a competitor's without a factual basis.\nConfidentiality: no unreleased product details are pasted into a public AI tool before launch.\nHuman approval: nothing publishes without a team member's final review.",
+        humanReview: "A team member reviews every AI-drafted piece for brand voice and factual accuracy before it's scheduled. Nothing publishes automatically.",
+        testingCriteria: "Brand voice: does it sound like Summit, not generic AI copy\nAccuracy: did it invent a spec, price, or claim not provided\nUsefulness: did the format (blog, social, email) actually fit the platform\nHuman editing required: how much rewriting before it was publish-ready",
+        testingNotes: "Tested all 5 prompts against 3 real-shaped content topics. The first blog drafts consistently opened with a generic, overly formal sentence — added an explicit brand-voice example to the prompt and retested; the revised drafts opened much closer to Summit's actual tone.",
+        successMeasures: "Content pieces published per month\nAverage time to produce one piece\nEngagement rate on published content",
+        implementPilot: "Pilot with the 3-person marketing team for 30 days, running every new blog post and its social/email variants through the AI-assisted workflow. Track output volume and drafting time against the current 8-10 posts/month baseline.",
+        implementTraining: "Train the team on prompting for brand voice, and on the responsible-AI rule that nothing publishes without a brand-voice and accuracy check.",
+        implementHandoff: "A team member edits and approves every piece before it's scheduled — the AI drafts, the team decides what goes live.",
+        implementAdoptionRisks: "The team may feel AI drafts still take as long to edit as writing from scratch at first. Mitigate by starting with the most repetitive content types (product descriptions, social captions) where editing time is lowest.",
+        implementFeedback: "Collect weekly feedback on how much editing each draft needed and which content types saved the most time.",
+        implementImprove: "After 30 days, compare output volume and drafting time against baseline. Refine the brand-voice prompt based on the most common edits made.",
+        implementScale: "Recommend scaling to all content types if output volume increases without a drop in engagement rate, and the team reports the workflow is genuinely saving time. Otherwise, narrow to the highest-value content types and keep iterating.",
+        nextSteps: "Summit should pilot the AI-assisted workflow on blog and social content before expanding to email campaigns.\nDo not present untested output or engagement targets as already-achieved results."
       },
       rawText: "Summit Outdoor Gear — an e-commerce retailer specializing in hiking, camping, and outdoor equipment with annual revenue of $8M and a team of 35 employees.\n\nBusiness Challenge: Our marketing team currently produces 8-10 blog posts, 20 social media posts, and 4 email campaigns monthly. Competitors are publishing 3x more content and ranking higher in search results. Our small marketing team (3 people) is overwhelmed, leading to inconsistent posting schedules and missed opportunities during peak seasons.\n\nProject Objectives: Create an AI-powered content creation system that increases content output by 200% without additional headcount, maintains brand voice consistency, improves SEO performance, and reduces content creation time per piece by 60%."
     },
@@ -1739,8 +1874,41 @@
         clientName: "Horizon Corporate Events",
         objective: "Design and prototype an AI-powered event planning system that reduces initial venue and vendor research time by 50%, automates the drafting of routine vendor communications and inbox management, generates creative event themes and schedules using AI as a collaboration tool, and maintains strict privacy regarding unannounced corporate client data.",
         problemSummary: "Horizon's event planners are overwhelmed by the manual, routine tasks involved in organizing events. They spend excessive time researching venues, drafting repetitive vendor outreach emails, and making complex logistical decisions.",
+        keyChallenges: "Planners spend hours manually researching venues and vendors for every event with no shared system to reuse past research.\nDrafting and following up on vendor emails eats up nearly a third of a planner's week.\nCreative brainstorming for event themes gets squeezed out by administrative work.",
         baselineMetrics: "Planners spend an average of 12 hours manually researching venues and comparing vendor options for a single event\nDrafting customized vendor emails and follow-ups consumes 30% of a planner's week\nConsolidating vendor schedules into a client itinerary is done manually and is prone to errors",
-        beforeAfter: "Before: 12 hours researching venues per event\nAfter: "
+        currentWorkflow: "Client Brief -> Manual Venue Research -> Manual Vendor Outreach -> Manual Itinerary Build -> Event",
+        workflow: "Client Brief -> AI Venue Shortlist -> AI-Drafted Vendor Emails -> Human Review -> Itinerary Assembled -> Event",
+        beforeAfter: "Before: 12 hours researching venues per event\nAfter: ",
+        solutionName: "AI-Assisted Event Planning Toolkit",
+        solutionDescription: "An AI-assisted workflow that turns a client brief into a shortlist of venue options and drafts the first round of vendor outreach emails, so planners spend their time on the creative and relationship work instead of repetitive research and typing. A planner still chooses the final venue and vendors.",
+        prompt1Purpose: "Client Brief -> Venue Shortlist Criteria",
+        prompt1Text: "Based on this client brief (guest count, budget, location preference, event type), list the 5 criteria that matter most for shortlisting a venue, in priority order.",
+        prompt2Purpose: "Criteria -> Vendor Outreach Email",
+        prompt2Text: "Draft a vendor outreach email asking about availability and pricing for this event, based on the criteria above. Keep it under 150 words and professional in tone.",
+        prompt3Purpose: "Vendor Outreach Quality Review",
+        prompt3Text: "Review this draft vendor email for any date, budget, or guest-count detail that doesn't match the client brief, and for a tone that's appropriately professional. List any issues.",
+        prompt4Purpose: "Brief -> Event Theme Ideas",
+        prompt4Text: "Based on this client brief, suggest 3 creative event theme directions, each with a one-sentence rationale for why it fits this client's goals.",
+        prompt5Purpose: "Itinerary Draft",
+        prompt5Text: "Using the confirmed venue, vendors, and schedule below, draft a one-page client-facing itinerary in a clear, professional format.",
+        sampleProposal: "Hi Sam,\n\nBased on your brief for a 120-person offsite in Austin with a $40K budget, here's our shortlist: two venues that fit your guest count and budget, both with availability on your target date. We've also drafted outreach to your top vendor picks for catering and AV — happy to walk through the shortlist on a quick call.",
+        followUpMessage1: "Hi Sam — checking in to see if the venue shortlist works for your team, or if you'd like a few more options.",
+        followUpMessage2: "Hi Sam — wanted to flag that one of the venues just confirmed availability for your date — worth prioritizing if you're ready to move forward.",
+        followUpMessage3: "Hi Sam — closing the loop on this shortlist for now. Reach out whenever you're ready to lock in a venue.",
+        proposalQualityReview: "The first AI-drafted vendor email stated a guest count that didn't match the client brief (rounded up) — corrected to the exact number. Tone read as slightly too casual for a first outreach to an unfamiliar vendor; adjusted to a more formal opening.",
+        risksSafeguards: "Accuracy: every AI-drafted vendor email is checked against the actual client brief for date, budget, and guest-count details before sending.\nOverpromising: no email or itinerary commits to a vendor or price that hasn't actually been confirmed.\nConfidentiality: unannounced corporate client details (company name, event purpose) are not pasted into a public AI tool without the client's consent.\nTransparency: vendors aren't told outreach was AI-drafted, since a planner reviews and owns every message.\nHuman approval: a planner reviews and sends every vendor email and finalizes every itinerary.",
+        humanReview: "A planner reviews every AI-drafted vendor email and itinerary before it's sent to a vendor or client. Nothing goes out unreviewed.",
+        testingCriteria: "Accuracy: did it match the client brief's actual date, budget, and guest count\nTone: is it appropriately professional for a first vendor contact\nUsefulness: did the shortlist criteria actually reflect the client's priorities\nHuman editing required: how much rewriting before it was ready to send",
+        testingNotes: "Tested all 5 prompts against 3 fictional client briefs with different guest counts and budgets. The vendor-email prompt occasionally rounded the guest count — added an instruction to use the exact number stated in the brief, and retested with correct results.",
+        successMeasures: "Venue research time per event\nTime spent drafting vendor outreach\nClient satisfaction with the final itinerary",
+        implementPilot: "Pilot on 2-3 upcoming events for 30 days, running venue research and vendor outreach through the AI-assisted workflow. Track research and drafting time against the 12-hour/30%-of-week baseline.",
+        implementTraining: "Train pilot planners on reviewing AI-drafted outreach for accuracy against the client brief, and on the responsible-AI rule around unannounced client confidentiality.",
+        implementHandoff: "A planner reviews and sends every vendor email and finalizes every itinerary — the AI never contacts a vendor or client directly.",
+        implementAdoptionRisks: "Planners may feel reviewing a draft is slower than just writing it themselves at first. Mitigate by starting with the most repetitive outreach (initial availability checks) where the draft saves the most time.",
+        implementFeedback: "Collect weekly feedback from pilot planners on how much editing each draft needed and which parts of the process felt genuinely faster.",
+        implementImprove: "After 30 days, compare research and drafting time against baseline. Refine the shortlist and outreach prompts based on the most common corrections planners made.",
+        implementScale: "Recommend scaling to all events if research and drafting time improve without a drop in client satisfaction. Otherwise, keep the pilot narrow and keep iterating.",
+        nextSteps: "Horizon should pilot the AI-assisted toolkit on a few upcoming events before rolling it out across the team.\nDo not present untested time-savings targets as already-achieved results."
       },
       rawText: "Horizon Corporate Events — a 45-person event planning agency in Seattle, organizing corporate retreats, conferences, and team-building offsites.\n\nBusiness Challenge: Horizon's event planners are overwhelmed by the manual, routine tasks involved in organizing events. They spend excessive time researching venues, drafting repetitive vendor outreach emails, and making complex logistical decisions. This administrative burden limits their ability to take on new clients and focus on big-picture creative event design.\n\nCurrent State of Event Planning:\n- Planners spend an average of 12 hours manually researching venues and comparing vendor options for a single event.\n- Drafting customized emails and following up with caterers, AV teams, and speakers consumes 30% of a planner's week.\n- Consolidating various vendor schedules into a cohesive client itinerary is done manually and is prone to errors.\n- The agency's flooded inbox often leads to delayed responses to vendor inquiries.\n- Planners struggle to find the time needed to brainstorm creative themes for clients.\n\nProject Objectives: Design and prototype an AI-powered event planning system that reduces initial venue and vendor research time by 50%, automates the drafting of routine vendor communications and inbox management, generates creative event themes and schedules using AI as a collaboration tool, and maintains strict privacy regarding unannounced corporate client data."
     },
@@ -1750,8 +1918,41 @@
         clientName: "Apex Retail Analytics",
         objective: "Design and prototype an AI-enhanced reporting workflow that cuts the time spent analyzing and summarizing dense spreadsheets by 60%, uses generative AI to rapidly draft detailed sales reports, effectively highlights key data insights for clients, and generates engaging presentation outlines based on data findings.",
         problemSummary: "Apex's analysts spend the majority of their time executing routine tasks, specifically analyzing dense spreadsheets and summarizing financial notes. Because drafting detailed sales reports from scratch requires so much time and effort, analysts are struggling to keep up with client demand.",
+        keyChallenges: "Analysts spend up to 15 hours a week manually summarizing dense spreadsheets before any actual analysis happens.\nDrafting a standard sales report from scratch takes 3 full business days.\nThere's no standardized way to quickly pull a high-level insight for a rapid client request.",
         baselineMetrics: "Analysts spend up to 15 hours a week manually summarizing notes and dense data spreadsheets\nDrafting a standard detailed sales report takes 3 full business days\nNo standardized process exists for quickly pulling high-level insights for rapid client requests",
-        beforeAfter: "Before: 15 hours a week summarizing data\nAfter: "
+        currentWorkflow: "Raw Data -> Manual Spreadsheet Review -> Manual Summary -> Manual Report Draft -> Client Delivery",
+        workflow: "Raw Data -> AI Data Summary -> AI Report Draft -> Human Analyst Review -> Client Delivery",
+        beforeAfter: "Before: 15 hours a week summarizing data\nAfter: ",
+        solutionName: "AI-Assisted Reporting Workflow",
+        solutionDescription: "An AI-assisted workflow that summarizes a dense data export into key findings and drafts the first version of a client report from those findings, so analysts spend their time on interpretation and strategic recommendations instead of manual summarization. An analyst verifies every number before it reaches a client.",
+        prompt1Purpose: "Data Export -> Key Findings Summary",
+        prompt1Text: "Summarize the 5 most notable findings in this sales data export, stated as plain-language observations with the specific number behind each one. Do not round or estimate a number that's in the data.",
+        prompt2Purpose: "Findings -> Report Section Draft",
+        prompt2Text: "Using these findings, draft the 'Key Insights' section of a client sales report in Apex's professional, data-first voice. Cite the specific number behind each insight.",
+        prompt3Purpose: "Report Draft Quality Review",
+        prompt3Text: "Review this draft report section for any number that doesn't match the source data, or any conclusion that goes beyond what the data actually supports. List each issue found.",
+        prompt4Purpose: "Findings -> Presentation Outline",
+        prompt4Text: "Turn these findings into an 8-slide presentation outline for a client meeting, one finding per slide, each with a one-line headline stating the takeaway.",
+        prompt5Purpose: "Rapid Client Insight",
+        prompt5Text: "A client just asked for a quick answer to this specific question using the data below. Give a direct, one-paragraph answer with the exact number, and flag if the data doesn't fully support a confident answer.",
+        sampleProposal: "Client Report Excerpt — Key Insights\n\nRegional sales grew 12% quarter-over-quarter, driven primarily by the Southeast region (+22%). Inventory turnover slowed in the Northeast, with average days-on-shelf up from 34 to 41 — worth investigating before the next ordering cycle.",
+        followUpMessage1: "Draft note to the account lead: here's the first draft of this quarter's key insights section — flagging the Northeast inventory finding for a sanity check before we send it.",
+        followUpMessage2: "Draft note to the account lead: verified the Northeast number against the raw export, it holds — ready for final review.",
+        followUpMessage3: "Draft note to the account lead: this report is ready to send whenever you've had a chance to review.",
+        proposalQualityReview: "The first AI draft rounded a growth figure from 12.3% to 'about 12%' without flagging the rounding, and stated a causal claim ('driven by') that the data only supports as a correlation — reworded to state the correlation plainly and kept the exact figure.",
+        risksSafeguards: "Accuracy: every number in an AI-drafted report is checked against the original data export before it's sent to a client.\nOverclaiming: the AI is instructed to flag correlation versus causation rather than stating a cause it can't verify.\nConfidentiality: client sales data isn't pasted into a public AI tool without an approved, access-controlled environment.\nTransparency: clients aren't told a report was AI-drafted, since an analyst verifies and owns every figure.\nHuman approval: an analyst reviews every number and conclusion before a report goes to a client.",
+        humanReview: "An analyst checks every AI-drafted figure against the source data and reviews every conclusion before a report is sent. Nothing goes to a client unverified.",
+        testingCriteria: "Accuracy: did every number match the source data exactly\nRigor: did it avoid a causal claim the data doesn't support\nUsefulness: did the findings actually reflect the most notable patterns in the data\nHuman editing required: how much correction before it was client-ready",
+        testingNotes: "Tested all 5 prompts against 3 fictional but realistically-shaped sales data exports. The findings summary occasionally rounded a figure without flagging it — added an explicit 'state the exact number, do not round' instruction and retested with correct results.",
+        successMeasures: "Time spent summarizing data per report\nTime to draft a full client report\nNumber of client requests answered same-day",
+        implementPilot: "Pilot with 2-3 analysts for 30 days on standard client reports. Track summarization and drafting time against the 15-hour/3-day baseline.",
+        implementTraining: "Train pilot analysts on verifying every AI-drafted number against the source data, and on the responsible-AI rule against overclaiming causation.",
+        implementHandoff: "An analyst verifies every figure and reviews every conclusion before a report reaches a client — this does not change during or after the pilot.",
+        implementAdoptionRisks: "Analysts may distrust a number they didn't personally calculate. Mitigate by having analysts spot-check AI-drafted figures against the raw data early on and sharing accuracy results from the pilot.",
+        implementFeedback: "Collect weekly feedback from pilot analysts on how often a figure needed correction and how much drafting time was actually saved.",
+        implementImprove: "After 30 days, compare summarization and drafting time against baseline. Refine the findings-summary prompt based on any accuracy issues found.",
+        implementScale: "Recommend scaling to all client reports if drafting time improves without any drop in accuracy. Otherwise, keep the pilot narrow and keep iterating on accuracy first.",
+        nextSteps: "Apex should pilot the AI-assisted reporting workflow on standard reports before extending it to custom client requests.\nDo not present untested time-savings targets as already-achieved results."
       },
       rawText: "Apex Retail Analytics — a 75-person consulting firm in Chicago that provides retail market insights and sales trend analysis for mid-sized retail chains.\n\nBusiness Challenge: Apex's analysts spend the majority of their time executing routine tasks, specifically analyzing dense spreadsheets and summarizing financial notes. Because drafting detailed sales reports from scratch requires so much time and effort, analysts are struggling to keep up with client demand and are missing opportunities to provide deeper, strategic consulting.\n\nCurrent State of Data Reporting:\n- Analysts spend up to 15 hours a week manually summarizing notes and dense data spreadsheets.\n- Drafting a standard detailed sales report takes 3 full business days.\n- Key insights are sometimes buried because analysts are fatigued by routine formatting tasks.\n- There is no standardized process for quickly pulling high-level insights for rapid client requests.\n- Junior analysts frequently struggle to format presentations engagingly.\n\nProject Objectives: Design and prototype an AI-enhanced reporting workflow that cuts the time spent analyzing and summarizing dense spreadsheets by 60%, uses generative AI to rapidly draft detailed sales reports, effectively highlights key data insights for clients, and generates engaging presentation outlines based on data findings."
     },
@@ -1761,18 +1962,55 @@
         clientName: "Nexus Design Studio",
         objective: "Design and prototype an AI productivity system that automates the summarizing of meeting notes and extraction of action items, reduces the time needed to draft project outlines and email responses by 70%, uses generative AI as a collaborative brainstorming tool for product features, and evaluates the optimal AI tools for different routine PM tasks.",
         problemSummary: "The project management team at Nexus is drowning in administrative tasks. They spend too much time manually summarizing meeting notes, tracking action items, and drafting project kickoff outlines.",
+        keyChallenges: "PMs spend 8-10 hours a week just summarizing notes from client meetings and internal standups.\nAction items are often lost because extracting them from a meeting transcript is entirely manual.\nCreative brainstorming for app features is siloed and rarely collaborative.",
         baselineMetrics: "PMs spend 8-10 hours a week summarizing notes from client meetings and internal standups\nDrafting a comprehensive project kickoff outline takes a full day\nAction items are often lost from meeting transcripts",
-        beforeAfter: "Before: 8-10 hours a week summarizing meeting notes\nAfter: "
+        currentWorkflow: "Meeting Happens -> Manual Note-Taking -> Manual Summary -> Manual Action Item List -> Manual Follow-Up",
+        workflow: "Meeting Transcript -> AI Meeting Summary -> AI-Extracted Action Items -> Human Review -> Team Follow-Up",
+        beforeAfter: "Before: 8-10 hours a week summarizing meeting notes\nAfter: ",
+        solutionName: "AI-Assisted PM Workflow Assistant",
+        solutionDescription: "An AI-assisted workflow that turns a raw meeting transcript into a clear summary and a checked action-item list, so PMs spend their time following up and unblocking work instead of re-reading their own notes. A PM still confirms every action item before it's assigned.",
+        prompt1Purpose: "Transcript -> Meeting Summary",
+        prompt1Text: "Summarize this meeting transcript into a plain-language recap: what was discussed, what was decided, and what's still open. Do not invent a decision that wasn't actually made in the meeting.",
+        prompt2Purpose: "Transcript -> Action Items",
+        prompt2Text: "Extract every action item from this meeting transcript as a list, with who owns each item and any deadline mentioned. If no owner was stated, mark it 'unassigned' rather than guessing.",
+        prompt3Purpose: "Action Items Quality Review",
+        prompt3Text: "Review this extracted action item list against the transcript and flag anything that was assigned to the wrong person, missing a stated deadline, or not actually an action item (just a comment).",
+        prompt4Purpose: "Objective -> Project Kickoff Outline",
+        prompt4Text: "Based on this project objective and scope, draft a one-page kickoff outline: goals, milestones, and the first two weeks of work. Do not invent a deadline not already provided.",
+        prompt5Purpose: "Feature Brainstorm",
+        prompt5Text: "Given this product objective, suggest 5 possible feature directions the team could explore, each with a one-sentence rationale for why it fits the objective. Frame these as starting points for discussion, not decisions.",
+        sampleProposal: "Meeting Recap — Client Kickoff, Tuesday\n\nWe agreed on a 3-sprint timeline for the initial build. Open question: whether the client's brand assets will be ready by Sprint 1 kickoff — Dana to confirm by Friday.\n\nAction Items: Dana to confirm brand asset timeline (by Fri); Sam to draft the technical scope doc (by next Wed).",
+        followUpMessage1: "Draft note to the team: here's the recap and action items from today's client kickoff — flag anything I got wrong before I send it to the client.",
+        followUpMessage2: "Draft note to the team: updated the recap with Dana's confirmation on brand assets — ready to send to the client.",
+        followUpMessage3: "Draft note to the team: this recap is finalized and going out to the client now.",
+        proposalQualityReview: "The first AI-extracted action item list assigned an item to the wrong person because two people spoke in a similar tone in the transcript — corrected by cross-checking against who actually volunteered for the task. One item was marked with a deadline that was actually just someone thinking out loud, not a commitment — removed.",
+        risksSafeguards: "Accuracy: a PM checks every extracted action item against the actual transcript before assigning it.\nOverclaiming: the AI is instructed to mark an item 'unassigned' rather than guess an owner when the transcript is unclear.\nConfidentiality: client meeting transcripts aren't pasted into a public AI tool without client consent.\nTransparency: teammates know meeting recaps are AI-drafted and PM-reviewed, not verbatim minutes.\nHuman approval: a PM reviews and confirms every summary and action item before it's shared or assigned.",
+        humanReview: "A PM reviews every AI-generated summary and action item list against the actual meeting before sharing it with the team or client. Nothing is auto-assigned.",
+        testingCriteria: "Accuracy: did the summary reflect only what was actually discussed and decided\nCompleteness: were all real action items captured, with the correct owner\nUsefulness: was the kickoff outline realistic and specific, not generic\nHuman editing required: how much correction before it was ready to share",
+        testingNotes: "Tested all 5 prompts against 3 fictional but realistic meeting transcripts. The action-item extraction occasionally misattributed an item between two speakers — added an instruction to only assign an owner when explicitly stated, and retested with correct results.",
+        successMeasures: "Time spent summarizing meetings per week\nAction items missed or dropped\nTime to draft a project kickoff outline",
+        implementPilot: "Pilot with 2-3 PMs for 30 days on client and internal meetings. Track summarization time and dropped action items against the 8-10 hour/week baseline.",
+        implementTraining: "Train pilot PMs on reviewing AI-extracted action items against the transcript before assigning them, and on the responsible-AI rule around client meeting confidentiality.",
+        implementHandoff: "A PM reviews and confirms every summary and action item before it's shared with the team or a client — this does not change during or after the pilot.",
+        implementAdoptionRisks: "PMs may feel reviewing an AI summary takes as long as writing their own notes at first. Mitigate by starting with the longest, most repetitive meetings where the time savings are largest.",
+        implementFeedback: "Collect weekly feedback from pilot PMs on how much correction each summary needed and whether action items were actually more complete.",
+        implementImprove: "After 30 days, compare summarization time and dropped action items against baseline. Refine the extraction prompt based on the most common corrections PMs made.",
+        implementScale: "Recommend scaling to all PMs if summarization time drops and fewer action items are missed. Otherwise, keep the pilot narrow and keep iterating on accuracy.",
+        nextSteps: "Nexus should pilot the AI-assisted workflow on a subset of meetings before rolling it out to every PM.\nDo not present untested time-savings targets as already-achieved results."
       },
       rawText: "Nexus Design Studio — a 50-person digital product design agency in New York, managing multiple concurrent app development projects for diverse clients.\n\nBusiness Challenge: The project management (PM) team at Nexus is drowning in administrative tasks. They spend too much time manually summarizing meeting notes, tracking action items, and drafting project kickoff outlines. This leaves them with never enough time to tackle the work that actually matters to the success of the app builds.\n\nCurrent State of Project Management Workflow:\n- PMs spend 8-10 hours a week just summarizing notes from client meetings and internal standups.\n- Drafting a comprehensive project kickoff outline takes a full day.\n- Action items are often lost because of the manual effort required to extract them from meeting transcripts.\n- The flooded PM inbox causes delays in responding to routine client status updates.\n- Creative brainstorming for app features is siloed and rarely collaborative.\n\nProject Objectives: Design and prototype an AI productivity system that automates the summarizing of meeting notes and extraction of action items, reduces the time needed to draft project outlines and email responses by 70%, uses generative AI as a collaborative brainstorming tool for product features, and evaluates the optimal AI tools for different routine PM tasks."
     }
   };
 
-  // Fields a preset ever sets — cleared before applying a newly-picked
-  // preset so switching from one sample brief to another can't leave a
-  // stale value from the first sitting in a field the second doesn't set
-  // (Summit, for instance, has no Before/After starting point).
-  var PRESET_CLEARABLE_FIELDS = ["clientName", "problemSummary", "objective", "baselineMetrics", "beforeAfter"];
+  // Every content field a preset can set, minus teamNumber and team-member
+  // fields (which stay under the team's own control regardless of which
+  // brief is picked). Cleared before applying a newly-picked preset so
+  // switching from one sample brief to another can't leave a stale value —
+  // e.g. Meridian's sample proposal — sitting in a field the next preset
+  // doesn't happen to set.
+  var PRESET_CLEARABLE_FIELDS = FIELD_IDS.filter(function (id) {
+    return id !== "presetProjectSelect" && id !== "teamNumber" && TEAM_MEMBER_FIELD_IDS.indexOf(id) === -1;
+  });
 
   // Which single wizard field each kind of instructor question answers.
   // First matching pattern wins.
@@ -3157,6 +3395,14 @@
         if (el) el.value = "";
       });
       finishUpload(preset.extracted, preset.rawText);
+      // finishUpload's own message is written for real brief-extraction
+      // (only a few fields, "nothing here is guessed"). A preset fills in
+      // every field with a complete worked example instead, so it needs its
+      // own, more honest message — this is reference material to replace,
+      // not something to submit as-is.
+      var summaryEl = document.getElementById("uploadSummary");
+      summaryEl.textContent = "This is a complete worked example for a fictional company — problem statement, solution, prompts, proposal, testing notes, and 90-day plan are all filled in as a reference for structure and depth. Replace every field with your own team's actual research, solution, and testing before you submit. Do not submit this example content as your own work.";
+      summaryEl.hidden = false;
     });
 
     document.getElementById("docUpload").addEventListener("change", function () {
