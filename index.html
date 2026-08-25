@@ -292,7 +292,7 @@
 
   .team-row {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1.4fr 1fr;
     align-items: start;
     gap: 10px;
     margin-bottom: 16px;
@@ -420,15 +420,15 @@
           </fieldset>
 
           <fieldset>
-            <legend title="Who's on the team, their role, and which deliverable step below is theirs.">Team Members</legend>
+            <legend title="Who's on the team and which deliverable step below is theirs.">Team Members</legend>
 
             <div class="upload-box" style="margin-bottom:16px;">
-              <label class="upload-label" for="teamDocUpload">Upload your team roles &amp; responsibilities doc <span class="hint">(.docx, .txt, or .md — optional)</span></label>
+              <label class="upload-label" for="teamDocUpload">Upload your team roster doc <span class="hint">(.docx, .txt, or .md — optional)</span></label>
               <input type="file" id="teamDocUpload" accept=".txt,.md,.markdown,.docx,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
               <button type="button" id="btnToggleTeamPaste" class="btn-secondary btn-small">Or paste the text instead</button>
               <div id="teamPasteArea" hidden style="width:100%;">
                 <label for="teamDocPasteText">Paste your team roster text</label>
-                <textarea id="teamDocPasteText" rows="8" placeholder="Paste your team's names, roles, and responsibilities here..."></textarea>
+                <textarea id="teamDocPasteText" rows="8" placeholder="Paste your team's names here..."></textarea>
                 <button type="button" id="btnUseTeamPasted" class="btn-secondary btn-small" style="margin-top:8px;">Use This Text</button>
               </div>
               <div id="teamUploadSummary" class="upload-summary" hidden></div>
@@ -437,7 +437,6 @@
             <div class="team-member-block">
               <div class="team-row">
                 <div><label for="teamMember1Name">Name</label><input type="text" id="teamMember1Name" value="" placeholder="Team lead's name"></div>
-                <div><label for="teamMember1Role">Role</label><input type="text" id="teamMember1Role" value="Team Lead / Project Manager"></div>
                 <div>
                   <label for="teamMember1Responsibility">Responsibility <span class="hint">(which deliverable this person owns, from the project's own list)</span></label>
                   <select id="teamMember1Responsibility">
@@ -449,7 +448,6 @@
             <div class="team-member-block">
               <div class="team-row">
                 <div><label for="teamMember2Name">Name</label><input type="text" id="teamMember2Name" value="" placeholder="This person's name"></div>
-                <div><label for="teamMember2Role">Role</label><input type="text" id="teamMember2Role" value="AI / Prompt & Prototype Lead"></div>
                 <div>
                   <label for="teamMember2Responsibility">Responsibility</label>
                   <select id="teamMember2Responsibility">
@@ -461,7 +459,6 @@
             <div class="team-member-block">
               <div class="team-row">
                 <div><label for="teamMember3Name">Name</label><input type="text" id="teamMember3Name" value="" placeholder="This person's name"></div>
-                <div><label for="teamMember3Role">Role</label><input type="text" id="teamMember3Role" value="Business & Workflow Analyst"></div>
                 <div>
                   <label for="teamMember3Responsibility">Responsibility</label>
                   <select id="teamMember3Responsibility">
@@ -473,7 +470,6 @@
             <div class="team-member-block">
               <div class="team-row">
                 <div><label for="teamMember4Name">Name</label><input type="text" id="teamMember4Name" value="" placeholder="This person's name"></div>
-                <div><label for="teamMember4Role">Role</label><input type="text" id="teamMember4Role" value="Sales Content, Responsible AI & Presentation Lead"></div>
                 <div>
                   <label for="teamMember4Responsibility">Responsibility</label>
                   <select id="teamMember4Responsibility">
@@ -485,7 +481,6 @@
             <div class="team-member-block">
               <div class="team-row">
                 <div><label for="teamMember5Name">Name</label><input type="text" id="teamMember5Name" value="" placeholder="This person's name"></div>
-                <div><label for="teamMember5Role">Role</label><input type="text" id="teamMember5Role" value="Testing, Measurement & Quality Lead"></div>
                 <div>
                   <label for="teamMember5Responsibility">Responsibility</label>
                   <select id="teamMember5Responsibility">
@@ -497,7 +492,6 @@
             <div class="team-member-block">
               <div class="team-row">
                 <div><label for="teamMember6Name">Name</label><input type="text" id="teamMember6Name" value="" placeholder="This person's name"></div>
-                <div><label for="teamMember6Role">Role</label><input type="text" id="teamMember6Role" value="Implementation & Adoption Lead"></div>
                 <div>
                   <label for="teamMember6Responsibility">Responsibility</label>
                   <select id="teamMember6Responsibility">
@@ -696,7 +690,7 @@
   // Team Members field currently has that deliverable selected as their
   // Responsibility.
   var TEAM_MEMBER_COUNT = 6;
-  var TEAM_MEMBER_SUFFIXES = ["Name", "Role", "Responsibility"];
+  var TEAM_MEMBER_SUFFIXES = ["Name", "Responsibility"];
   var TEAM_MEMBER_FIELD_IDS = [];
   for (var ti = 1; ti <= TEAM_MEMBER_COUNT; ti++) {
     TEAM_MEMBER_SUFFIXES.forEach(function (suf) {
@@ -780,7 +774,7 @@
 
   var STEPS = [
     { title: "Upload Your Document", roleSlug: "", help: "Upload the project brief your instructor gave you (a .txt or .md file works best), or pick your assigned project below. We'll automatically pull in your client name, business challenge, and objective — nothing is invented, only what's actually in the brief." },
-    { title: "Team & Project Basics", roleSlug: "", help: "Whole team — team number, everyone's name/role/responsibility, your consulting team name, the client, the objective, and your logo." },
+    { title: "Team & Project Basics", roleSlug: "", help: "Whole team — team number, everyone's name and responsibility, your consulting team name, the client, the objective, and your logo." },
     { title: "Deliverable 1", roleSlug: 1, help: "This step's deliverable — one field per required item." },
     { title: "Deliverable 2", roleSlug: 2, help: "This step's deliverable — one field per required item." },
     { title: "Deliverable 3", roleSlug: 3, help: "This step's deliverable — one field per required item." },
@@ -905,7 +899,7 @@
     }
     if (teamFilled) {
       var teamEl = document.getElementById("teamUploadSummary");
-      teamEl.textContent = "Team names/roles are already filled in below — no need to upload the roster doc again unless you want to replace them.";
+      teamEl.textContent = "Team names are already filled in below — no need to upload the roster doc again unless you want to replace them.";
       teamEl.hidden = false;
     }
   }
@@ -1123,7 +1117,6 @@
       var d = respIndex ? (currentDeliverables[respIndex - 1] || DEFAULT_DELIVERABLES[respIndex - 1]) : null;
       members.push({
         name: name,
-        role: data["teamMember" + i + "Role"] || "",
         responsibility: d ? d.title : ""
       });
     }
@@ -1590,10 +1583,12 @@
     return (stop ? rest.slice(0, stop.index) : rest).trim();
   }
 
-  // Reads a markdown table with a header row that names a Role column (e.g.
+  // Reads a markdown table with a header row that names a member column (e.g.
   // "| Team Member | Role | Primary Ownership |") — a common export shape
   // (Google Docs, Word) for a team roster — and returns its rows as members.
-  // Returns null when no such table exists anywhere in the document.
+  // Only the name column matters now: Responsibility is a per-project index
+  // a document can't state, so the team picks it by hand. Returns null when
+  // no such table exists anywhere in the document.
   function parseTeamTable(text) {
     var lines = text.split(/\r?\n/);
     var rowRe = /^\s*\|.*\|\s*$/;
@@ -1611,13 +1606,11 @@
       if (!/^[\s|:-]+$/.test(sepLine) || sepLine.indexOf("-") === -1) continue;
 
       var headers = cellsOf(lines[i]).map(function (c) { return c.toLowerCase(); });
-      var nameIdx = -1, roleIdx = -1, respIdx = -1;
+      var nameIdx = -1;
       headers.forEach(function (h, idx) {
         if (nameIdx === -1 && (h.indexOf("member") !== -1 || h.indexOf("name") !== -1)) nameIdx = idx;
-        else if (roleIdx === -1 && h.indexOf("role") !== -1) roleIdx = idx;
-        else if (respIdx === -1 && (h.indexOf("owner") !== -1 || h.indexOf("respons") !== -1)) respIdx = idx;
       });
-      if (nameIdx === -1 || roleIdx === -1) continue;
+      if (nameIdx === -1) continue;
 
       var members = [];
       var j = i + 2;
@@ -1625,11 +1618,7 @@
         var cells = cellsOf(lines[j]);
         var name = cells[nameIdx] || "";
         if (name) {
-          members.push({
-            name: name,
-            role: cells[roleIdx] || "",
-            responsibility: respIdx !== -1 ? (cells[respIdx] || "") : ""
-          });
+          members.push({ name: name });
         }
         j++;
       }
@@ -1699,7 +1688,6 @@
     members.slice(0, TEAM_MEMBER_COUNT).forEach(function (m, i) {
       var n = i + 1;
       if (m.name) result["teamMember" + n + "Name"] = m.name;
-      if (m.role) result["teamMember" + n + "Role"] = m.role;
     });
 
     return result;
@@ -1709,13 +1697,13 @@
     var found = [];
     for (var i = 1; i <= TEAM_MEMBER_COUNT; i++) {
       var name = extracted["teamMember" + i + "Name"];
-      if (name) found.push(name + (extracted["teamMember" + i + "Role"] ? " (" + extracted["teamMember" + i + "Role"] + ")" : ""));
+      if (name) found.push(name);
     }
     if (!found.length) {
-      return "Couldn't find any team members in that document — check the format (a table with a Role column, a heading per person with a Role and Owns: list, or a \"Name — Role\" list all work) or just fill the fields in below.";
+      return "Couldn't find any team members in that document — check the format (a table with a Name column, a heading per person, or a \"Name — Role\" list all work) or just fill the fields in below.";
     }
     return "Found " + found.length + " team member" + (found.length > 1 ? "s" : "") + ": " + found.join(", ") +
-      ". Responsibilities are only filled in where the document actually listed one — review everything below.";
+      ". Assign each person's Responsibility from the dropdown below.";
   }
 
   function handleTeamFileUpload(file) {
@@ -2012,9 +2000,7 @@
     var body = '<div class="team-list">';
     members.forEach(function (m) {
       body += '<div class="team-member-card">';
-      body += '<div class="team-member-head"><span class="team-name">' + escapeHtml(m.name) + "</span>";
-      if (m.role) body += '<span class="team-role">' + escapeHtml(m.role) + "</span>";
-      body += "</div>";
+      body += '<div class="team-member-head"><span class="team-name">' + escapeHtml(m.name) + "</span></div>";
       if (m.responsibility) body += '<p class="team-responsibility">' + escapeHtml(m.responsibility) + "</p>";
       body += "</div>";
     });
@@ -2553,7 +2539,6 @@
     ".team-member-card:last-child { border-bottom:none; padding-bottom:0; }",
     ".team-member-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; }",
     ".team-name { font-weight:600; font-size:0.95rem; }",
-    ".team-role { color:#5b6472; font-size:0.85rem; }",
     ".team-responsibility { margin:4px 0 0; font-size:0.85rem; color:#5b6472; line-height:1.5; }",
     ".tag { display:inline-block; font-size:0.65rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; padding:2px 7px; border-radius:4px; vertical-align:middle; }",
     ".tag-fact { background:#e7f0ea; color:#1f6d43; }",
