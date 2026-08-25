@@ -373,11 +373,12 @@
         <button type="button" id="btnExport" class="btn-primary" title="Download a finished, standalone HTML copy of your preview to share or submit.">Export HTML</button>
         <button type="button" id="btnClear" class="btn-muted" title="Erase everything in the form and this browser's autosave. Asks you to confirm first.">Clear</button>
       </div>
-      <p class="autosave-note">Progress autosaves in this browser as a safety net. Click <strong>Save &amp; Get Link</strong> to save to the cloud and get a link — send that link to a teammate and it opens with everything already filled in.</p>
+      <p class="autosave-note">Progress autosaves in this browser as a safety net. Click <strong>Save &amp; Get Link</strong> to save to the cloud and get a link — send that link to a teammate and it opens with everything already filled in. Anyone with the link can open and edit it, so don't put sensitive or confidential information in this form.</p>
       <div class="upload-summary" id="shareLinkBox" hidden>
-        <strong>Your link — anyone who opens it can view and continue this project:</strong>
+        <strong>Your link:</strong>
         <input type="text" id="shareLinkUrl" readonly style="width:100%;margin-top:6px;">
         <button type="button" id="btnCopyLink" class="btn-secondary btn-small" style="margin-top:6px;">Copy Link</button>
+        <p style="margin:8px 0 0;">Anyone with this link can open and edit this project. Do not include sensitive or confidential information.</p>
       </div>
 
       <div id="briefReferenceBox" class="brief-reference" hidden>
@@ -431,45 +432,99 @@
 
             <div class="team-member-block">
               <div class="team-row">
-                <div><label for="teamMember1Name">Name</label><input type="text" id="teamMember1Name" value="" placeholder="Team lead's name"></div>
+                <div><label for="teamMember1Name">Name</label><input type="text" id="teamMember1Name" value="" placeholder="Team lead's name"><p class="team-row-hint" id="teamMember1Hint"></p></div>
                 <div><label for="teamMember1Role">Role</label><input type="text" id="teamMember1Role" value="Team Lead / Project Manager"></div>
                 <div><label for="teamMember1Responsibility">Responsibility</label><input type="text" id="teamMember1Responsibility" value="Coordination, deadlines, team meetings, client communication, project integration, final recommendation"></div>
               </div>
+              <label for="teamMember1Ownership">Deliverable Ownership <span class="hint">(which step's content this person owns — change if your team splits work differently)</span></label>
+              <select id="teamMember1Ownership">
+                <option value="" selected>Team Lead / Overall Project</option>
+                <option value="businessWorkflow">Business &amp; Workflow</option>
+                <option value="aiSolution">AI Solution &amp; Prototype</option>
+                <option value="proposal">Sample Proposal &amp; Responsible AI</option>
+                <option value="testing">Testing &amp; Measurement</option>
+                <option value="implementation">Implementation &amp; Adoption</option>
+              </select>
             </div>
             <div class="team-member-block">
               <div class="team-row">
-                <div><label for="teamMember2Name">Name</label><input type="text" id="teamMember2Name" value="" placeholder="This person's name"><p class="team-row-hint">Owns Step 4 — AI Solution</p></div>
+                <div><label for="teamMember2Name">Name</label><input type="text" id="teamMember2Name" value="" placeholder="This person's name"><p class="team-row-hint" id="teamMember2Hint"></p></div>
                 <div><label for="teamMember2Role">Role</label><input type="text" id="teamMember2Role" value="AI / Prompt & Prototype Lead"></div>
                 <div><label for="teamMember2Responsibility">Responsibility</label><input type="text" id="teamMember2Responsibility" value="Prompt development, prompt iteration, prototype development, AI workflow design"></div>
               </div>
+              <label for="teamMember2Ownership">Deliverable Ownership <span class="hint">(which step's content this person owns — change if your team splits work differently)</span></label>
+              <select id="teamMember2Ownership">
+                <option value="">Team Lead / Overall Project</option>
+                <option value="businessWorkflow">Business &amp; Workflow</option>
+                <option value="aiSolution" selected>AI Solution &amp; Prototype</option>
+                <option value="proposal">Sample Proposal &amp; Responsible AI</option>
+                <option value="testing">Testing &amp; Measurement</option>
+                <option value="implementation">Implementation &amp; Adoption</option>
+              </select>
             </div>
             <div class="team-member-block">
               <div class="team-row">
-                <div><label for="teamMember3Name">Name</label><input type="text" id="teamMember3Name" value="" placeholder="This person's name"><p class="team-row-hint">Owns Step 3 — Business &amp; Workflow</p></div>
+                <div><label for="teamMember3Name">Name</label><input type="text" id="teamMember3Name" value="" placeholder="This person's name"><p class="team-row-hint" id="teamMember3Hint"></p></div>
                 <div><label for="teamMember3Role">Role</label><input type="text" id="teamMember3Role" value="Business & Workflow Analyst"></div>
                 <div><label for="teamMember3Responsibility">Responsibility</label><input type="text" id="teamMember3Responsibility" value="Business problem analysis, current-state workflow, future-state workflow, business value analysis"></div>
               </div>
+              <label for="teamMember3Ownership">Deliverable Ownership <span class="hint">(which step's content this person owns — change if your team splits work differently)</span></label>
+              <select id="teamMember3Ownership">
+                <option value="">Team Lead / Overall Project</option>
+                <option value="businessWorkflow" selected>Business &amp; Workflow</option>
+                <option value="aiSolution">AI Solution &amp; Prototype</option>
+                <option value="proposal">Sample Proposal &amp; Responsible AI</option>
+                <option value="testing">Testing &amp; Measurement</option>
+                <option value="implementation">Implementation &amp; Adoption</option>
+              </select>
             </div>
             <div class="team-member-block">
               <div class="team-row">
-                <div><label for="teamMember4Name">Name</label><input type="text" id="teamMember4Name" value="" placeholder="This person's name"><p class="team-row-hint">Owns Step 5 — Sample Proposal</p></div>
+                <div><label for="teamMember4Name">Name</label><input type="text" id="teamMember4Name" value="" placeholder="This person's name"><p class="team-row-hint" id="teamMember4Hint"></p></div>
                 <div><label for="teamMember4Role">Role</label><input type="text" id="teamMember4Role" value="Sales Content, Responsible AI & Presentation Lead"></div>
                 <div><label for="teamMember4Responsibility">Responsibility</label><input type="text" id="teamMember4Responsibility" value="Sample proposal, follow-up communications, responsible AI, presentation development"></div>
               </div>
+              <label for="teamMember4Ownership">Deliverable Ownership <span class="hint">(which step's content this person owns — change if your team splits work differently)</span></label>
+              <select id="teamMember4Ownership">
+                <option value="">Team Lead / Overall Project</option>
+                <option value="businessWorkflow">Business &amp; Workflow</option>
+                <option value="aiSolution">AI Solution &amp; Prototype</option>
+                <option value="proposal" selected>Sample Proposal &amp; Responsible AI</option>
+                <option value="testing">Testing &amp; Measurement</option>
+                <option value="implementation">Implementation &amp; Adoption</option>
+              </select>
             </div>
             <div class="team-member-block">
               <div class="team-row">
-                <div><label for="teamMember5Name">Name</label><input type="text" id="teamMember5Name" value="" placeholder="This person's name"><p class="team-row-hint">Owns Step 6 — Testing</p></div>
+                <div><label for="teamMember5Name">Name</label><input type="text" id="teamMember5Name" value="" placeholder="This person's name"><p class="team-row-hint" id="teamMember5Hint"></p></div>
                 <div><label for="teamMember5Role">Role</label><input type="text" id="teamMember5Role" value="Testing, Measurement & Quality Lead"></div>
                 <div><label for="teamMember5Responsibility">Responsibility</label><input type="text" id="teamMember5Responsibility" value="Prototype testing, output evaluation, testing documentation, success measures, quality assessment"></div>
               </div>
+              <label for="teamMember5Ownership">Deliverable Ownership <span class="hint">(which step's content this person owns — change if your team splits work differently)</span></label>
+              <select id="teamMember5Ownership">
+                <option value="">Team Lead / Overall Project</option>
+                <option value="businessWorkflow">Business &amp; Workflow</option>
+                <option value="aiSolution">AI Solution &amp; Prototype</option>
+                <option value="proposal">Sample Proposal &amp; Responsible AI</option>
+                <option value="testing" selected>Testing &amp; Measurement</option>
+                <option value="implementation">Implementation &amp; Adoption</option>
+              </select>
             </div>
             <div class="team-member-block">
               <div class="team-row">
-                <div><label for="teamMember6Name">Name</label><input type="text" id="teamMember6Name" value="" placeholder="This person's name"><p class="team-row-hint">Owns Step 7 — Implementation</p></div>
+                <div><label for="teamMember6Name">Name</label><input type="text" id="teamMember6Name" value="" placeholder="This person's name"><p class="team-row-hint" id="teamMember6Hint"></p></div>
                 <div><label for="teamMember6Role">Role</label><input type="text" id="teamMember6Role" value="Implementation & Adoption Lead"></div>
                 <div><label for="teamMember6Responsibility">Responsibility</label><input type="text" id="teamMember6Responsibility" value="Implementation strategy, pilot structure, training approach, adoption, human handoffs, 30/60/90-day rollout, recommended next steps"></div>
               </div>
+              <label for="teamMember6Ownership">Deliverable Ownership <span class="hint">(which step's content this person owns — change if your team splits work differently)</span></label>
+              <select id="teamMember6Ownership">
+                <option value="">Team Lead / Overall Project</option>
+                <option value="businessWorkflow">Business &amp; Workflow</option>
+                <option value="aiSolution">AI Solution &amp; Prototype</option>
+                <option value="proposal">Sample Proposal &amp; Responsible AI</option>
+                <option value="testing">Testing &amp; Measurement</option>
+                <option value="implementation" selected>Implementation &amp; Adoption</option>
+              </select>
             </div>
           </fieldset>
 
@@ -872,7 +927,7 @@
   // name is hardcoded — each step's "owner" is read live from the matching
   // Team Members field (see ROLE_OWNER_FIELD / ownerName below).
   var TEAM_MEMBER_COUNT = 6;
-  var TEAM_MEMBER_SUFFIXES = ["Name", "Role", "Responsibility"];
+  var TEAM_MEMBER_SUFFIXES = ["Name", "Role", "Responsibility", "Ownership"];
   var TEAM_MEMBER_FIELD_IDS = [];
   for (var ti = 1; ti <= TEAM_MEMBER_COUNT; ti++) {
     TEAM_MEMBER_SUFFIXES.forEach(function (suf) {
@@ -898,10 +953,10 @@
     "nextSteps"
   ]);
 
-  // Which Team Members field (Step 2) owns each fixed deliverable role, and
-  // the display label for that role. ownerName() reads the live value at
-  // render time, so the name shown always matches what's currently typed in
-  // Step 2 — nobody's real name is ever hardcoded.
+  // Legacy fixed position mapping — used only as a fallback for data saved
+  // before Deliverable Ownership existed (a shared link or draft with no
+  // teamMemberNOwnership values at all), so an old project still shows the
+  // right owner instead of falling back to "Team Member" for everyone.
   var ROLE_OWNER_FIELD = {
     businessWorkflow: "teamMember3Name",
     aiSolution: "teamMember2Name",
@@ -917,10 +972,51 @@
     implementation: "Implementation Plan"
   };
 
+  // Which Team Members field (Step 2) owns each fixed deliverable role.
+  // Ownership is now explicit (each member picks it from a dropdown) rather
+  // than inferred from member position, so a roster in any order is still
+  // attributed correctly. ownerName() reads the live value at render time,
+  // so the name shown always matches Step 2's current selections — nobody's
+  // real name is ever hardcoded.
+  function ownerFieldForRole(data, roleSlug) {
+    for (var i = 1; i <= TEAM_MEMBER_COUNT; i++) {
+      if ((data["teamMember" + i + "Ownership"] || "") === roleSlug) {
+        return "teamMember" + i + "Name";
+      }
+    }
+    return ROLE_OWNER_FIELD[roleSlug];
+  }
+
   function ownerName(data, roleSlug) {
-    var field = ROLE_OWNER_FIELD[roleSlug];
+    var field = ownerFieldForRole(data, roleSlug);
     var name = field && data[field] ? data[field].trim() : "";
     return name || "Team Member";
+  }
+
+  // Display label + wizard step number for each ownership value, shown as
+  // the live hint under a team member's Name field so it always agrees with
+  // whatever is currently selected in their Deliverable Ownership dropdown.
+  var OWNERSHIP_HINT_LABEL = {
+    businessWorkflow: "Business & Workflow",
+    aiSolution: "AI Solution & Prototype",
+    proposal: "Sample Proposal & Responsible AI",
+    testing: "Testing & Measurement",
+    implementation: "Implementation & Adoption"
+  };
+  var OWNERSHIP_HINT_STEP = {
+    businessWorkflow: 3, aiSolution: 4, proposal: 5, testing: 6, implementation: 7
+  };
+
+  function updateOwnershipHints() {
+    for (var i = 1; i <= TEAM_MEMBER_COUNT; i++) {
+      var hint = document.getElementById("teamMember" + i + "Hint");
+      var sel = document.getElementById("teamMember" + i + "Ownership");
+      if (!hint || !sel) continue;
+      var val = sel.value;
+      hint.textContent = val
+        ? "Owns Step " + OWNERSHIP_HINT_STEP[val] + " — " + OWNERSHIP_HINT_LABEL[val]
+        : "Coordination role — no single deliverable step.";
+    }
   }
 
   var STEPS = [
@@ -1671,6 +1767,33 @@
     return null;
   }
 
+  // Infers Deliverable Ownership from a roster's own Role/Responsibility
+  // text, checked in this priority order so a "Responsible AI" mention in a
+  // proposal-owner's role text doesn't get mistaken for the AI Solution
+  // slot (that one requires "prompt"/"prototype", not a bare "AI"). Returns
+  // null — never a guess — when nothing confidently matches; the caller
+  // falls back to the original position-based default in that case.
+  var OWNERSHIP_INFERENCE = [
+    { roleSlug: "aiSolution", pattern: /\bprompt(s|ing)?\b|\bprototype\b|\bai\s+solution\b/i },
+    { roleSlug: "businessWorkflow", pattern: /\bbusiness\b[^\n]{0,20}\bworkflow\b|\bworkflow\b[^\n]{0,20}\banaly|\bbusiness\s+analyst\b/i },
+    { roleSlug: "testing", pattern: /\btesting\b|\bmeasurement\b|\bquality\b/i },
+    { roleSlug: "implementation", pattern: /\bimplementation\b|\badoption\b/i },
+    { roleSlug: "proposal", pattern: /\bproposal\b|\bsales\b|\bresponsible\s+ai\b|\bpresentation\b/i }
+  ];
+
+  function inferOwnershipFromRole(roleText, responsibilityText) {
+    var combined = (roleText || "") + " " + (responsibilityText || "");
+    for (var i = 0; i < OWNERSHIP_INFERENCE.length; i++) {
+      if (OWNERSHIP_INFERENCE[i].pattern.test(combined)) return OWNERSHIP_INFERENCE[i].roleSlug;
+    }
+    return null;
+  }
+
+  // The original fixed member-position arrangement, used only as the
+  // fallback when a roster's role text doesn't confidently say otherwise —
+  // never invented, just preserved for convenience per position.
+  var DEFAULT_OWNERSHIP_BY_POSITION = ["", "aiSolution", "businessWorkflow", "proposal", "testing", "implementation"];
+
   function parseTeamDoc(text) {
     var result = {};
     var members = parseTeamTable(text) || [];
@@ -1729,6 +1852,13 @@
       if (m.name) result["teamMember" + n + "Name"] = m.name;
       if (m.role) result["teamMember" + n + "Role"] = m.role;
       if (m.responsibility) result["teamMember" + n + "Responsibility"] = m.responsibility;
+      // Ownership: trust the roster's own role/responsibility text first: an
+      // uploaded roster can list a team in any order, and this is what keeps
+      // the right person attributed as the owner regardless of position.
+      // Only when nothing in their role text confidently says otherwise does
+      // this fall back to the original position-based default.
+      var inferred = inferOwnershipFromRole(m.role, m.responsibility);
+      result["teamMember" + n + "Ownership"] = inferred || DEFAULT_OWNERSHIP_BY_POSITION[i] || "";
     });
 
     return result;
@@ -1835,7 +1965,7 @@
     var eyebrow = data.teamNumber ? escapeHtml(data.teamNumber) + " · Capstone Project Preview" : "Capstone Project Preview";
     var logo = isValidImageDataUrl(data.logoDataUrl) ? data.logoDataUrl : null;
     var preparedDate = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
-    var confidentialTag = "Strictly Confidential — Prepared for " + (data.clientName || "Internal Review");
+    var confidentialTag = "Prepared for " + (data.clientName || "Internal Review");
     var subtitleParts = [];
     if (data.solutionName) subtitleParts.push(data.solutionName);
     if (data.teamName) subtitleParts.push("Prepared by " + data.teamName);
@@ -1887,7 +2017,7 @@
       html += '<div class="exec-col"><span class="exec-label">Our Recommendation</span><p>' + escapeHtml(solutionText) + "</p></div>";
     }
     if (measures.length) {
-      html += '<div class="exec-col"><span class="exec-label">Expected Impact</span><p>' + escapeHtml(measures.join(" · ")) + "</p></div>";
+      html += '<div class="exec-col"><span class="exec-label">How We\'ll Measure Success</span><p>' + escapeHtml(measures.join(" · ")) + "</p></div>";
     }
     html += "</div></section>";
     return html;
@@ -1930,7 +2060,12 @@
   // from the team's own text) plus a confidentiality/page-number footer —
   // applied uniformly to every body section below the cover.
   function wrapSlide(n, entry, confidentialTag) {
-    var html = '<section class="card slide">';
+    // A fixed 16:9 card clips or crowds content that doesn't fit it — long
+    // prose, a big list, several stacked images. flexHeight (set explicitly
+    // by a splitting render function, or auto-detected in buildPreviewHTML
+    // for anything else that runs long) switches that one card to a
+    // non-fixed height instead of shrinking or clipping its content.
+    var html = '<section class="card slide' + (entry.flexHeight ? " card-flex" : "") + '">';
     if (entry.headline) {
       html += '<p class="card-kicker"><span class="card-num">' + n + "</span>" + escapeHtml(entry.title) + "</p>";
       html += '<h2 class="slide-headline">' + escapeHtml(entry.headline) + "</h2>";
@@ -2033,8 +2168,14 @@
   };
 
   function parseValueWithUnit(str) {
-    var m = /(\d+(?:\.\d+)?)\s*([a-zA-Z%]*)/.exec(str || "");
-    return m ? { value: parseFloat(m[1]), unit: (m[2] || "").toLowerCase() } : null;
+    // Also accepts a range ("4-6 hours") and averages it, so a range doesn't
+    // parse as a bare unitless number and silently fail to compare against
+    // an "After:" value that has a unit.
+    var m = /(\d+(?:\.\d+)?)(?:\s*-\s*(\d+(?:\.\d+)?))?\s*([a-zA-Z%]*)/.exec(str || "");
+    if (!m) return null;
+    var value = parseFloat(m[1]);
+    if (m[2]) value = (value + parseFloat(m[2])) / 2;
+    return { value: value, unit: (m[3] || "").toLowerCase() };
   }
 
   // Converts to a comparable {value, kind}. Same "kind" on both sides of a
@@ -2100,22 +2241,26 @@
     return prompts;
   }
 
+  // One card per prompt (rather than all 5 stacked in one 16:9 card) —
+  // a real tested prompt plus its output can easily be long enough on its
+  // own to overflow a fixed-height slide, let alone five of them together.
   function renderPrototype(data) {
     var prompts = collectPrompts(data);
     var beforeAfter = parseMultiline(data.beforeAfter);
-    if (!prompts.length && !beforeAfter.length) return null;
-    var body = prompts.map(function (p) {
+    if (!prompts.length && !beforeAfter.length) return [];
+    var owner = ownerName(data, "aiSolution");
+    var entries = prompts.map(function (p) {
       var heading = "Prompt " + p.n + (p.purpose ? " — " + p.purpose : "");
-      var block = '<h3 class="sub-title">' + escapeHtml(heading) + "</h3>";
-      if (p.text) block += '<pre class="prototype-block">' + escapeHtml(p.text) + "</pre>";
-      return block;
-    }).join("");
+      var body = '<h3 class="sub-title">' + escapeHtml(heading) + "</h3>";
+      if (p.text) body += '<pre class="prototype-block">' + escapeHtml(p.text) + "</pre>";
+      return { title: "Prototype / Prompt Examples — Prompt " + p.n, owner: owner, body: body, flexHeight: true };
+    });
     if (beforeAfter.length) {
-      body += '<h3 class="sub-title">Before / After</h3>';
       var chart = renderBeforeAfterChart(beforeAfter);
-      body += chart || renderList(beforeAfter);
+      var body = '<h3 class="sub-title">Before / After</h3>' + (chart || renderList(beforeAfter));
+      entries.push({ title: "Prototype / Prompt Examples — Before / After", owner: owner, body: body, flexHeight: !chart });
     }
-    return { title: "Prototype / Prompt Examples", owner: ownerName(data, "aiSolution"), body: body };
+    return entries;
   }
 
   function renderSampleProposal(data) {
@@ -2127,11 +2272,16 @@
     var messages = [data.followUpMessage1, data.followUpMessage2, data.followUpMessage3]
       .map(function (m, i) { return m ? { n: i + 1, text: m } : null; })
       .filter(Boolean);
-    if (!messages.length) return null;
-    var body = messages.map(function (m) {
-      return '<h3 class="sub-title">Message ' + m.n + '</h3><pre class="prototype-block">' + escapeHtml(m.text) + "</pre>";
-    }).join("");
-    return { title: "Follow-Up Sequence", owner: ownerName(data, "proposal"), body: body };
+    if (!messages.length) return [];
+    var owner = ownerName(data, "proposal");
+    return messages.map(function (m) {
+      return {
+        title: "Follow-Up Sequence — Message " + m.n,
+        owner: owner,
+        body: '<pre class="prototype-block">' + escapeHtml(m.text) + "</pre>",
+        flexHeight: true
+      };
+    });
   }
 
   function renderProposalQualityReview(data) {
@@ -2200,36 +2350,60 @@
   // a closing one-line team
   // recommendation. Any subset can be filled in alone — a team that only
   // fills in Final Recommendation still gets a working slide.
+  // Splits the phased rollout plan into the 3 logical stages instead of one
+  // card holding all 8 fields — a full pilot + training + handoff + risk +
+  // feedback + measure + scale + recommendation writeup easily overflows a
+  // single fixed-height slide.
   function renderNextSteps(data) {
-    var items = [
-      { label: "Days 1-30 — Pilot", text: data.implementPilot },
-      { label: "Training Requirements", text: data.implementTraining },
-      { label: "Human Handoff Points", text: data.implementHandoff },
-      { label: "Adoption Risks", text: data.implementAdoptionRisks },
-      { label: "Feedback Process", text: data.implementFeedback },
-      { label: "Days 31-60 — Measure & Improve", text: data.implementImprove },
-      { label: "Days 61-90 — Scale Decision", text: data.implementScale }
-    ].filter(function (p) { return p.text; });
+    var owner = ownerName(data, "implementation");
     var steps = parseMultiline(data.nextSteps);
-    if (!items.length && !steps.length) return null;
+    var groups = [
+      {
+        title: "Implementation Plan — Pilot & Adoption",
+        items: [
+          { label: "Days 1-30 — Pilot", text: data.implementPilot },
+          { label: "Training Requirements", text: data.implementTraining },
+          { label: "Human Handoff Points", text: data.implementHandoff },
+          { label: "Adoption Risks", text: data.implementAdoptionRisks },
+          { label: "Feedback Process", text: data.implementFeedback }
+        ]
+      },
+      {
+        title: "Implementation Plan — Measure & Improve",
+        items: [{ label: "Days 31-60 — Measure & Improve", text: data.implementImprove }]
+      },
+      {
+        title: "Implementation Plan — Scale Decision & Recommendation",
+        items: [{ label: "Days 61-90 — Scale Decision", text: data.implementScale }],
+        trailingSteps: steps
+      }
+    ];
 
-    var body = items.map(function (p) {
-      return '<h3 class="sub-title">' + escapeHtml(p.label) + '</h3><p class="card-lead">' + escapeHtml(p.text) + "</p>";
-    }).join("");
-    if (steps.length) {
-      body += (items.length ? '<h3 class="sub-title">Final Recommendation</h3>' : "") +
-        '<ol class="next-steps">' + steps.map(function (line) {
-          var parsed = parseLabel(line);
-          return "<li>" + labelBadge(parsed.label) + escapeHtml(parsed.text) + "</li>";
-        }).join("") + "</ol>";
-    }
-    var headlineSource = items.length ? items[0].text : parseLabel(steps[0]).text;
-    return {
-      title: "Implementation Plan",
-      headline: "Recommended first step: " + firstSentence(headlineSource, 100),
-      owner: ownerName(data, "implementation"),
-      body: body
-    };
+    var entries = [];
+    var headlineSource = null;
+    groups.forEach(function (g) {
+      var filled = g.items.filter(function (it) { return it.text; });
+      var hasTrailing = !!(g.trailingSteps && g.trailingSteps.length);
+      if (!filled.length && !hasTrailing) return;
+      var body = filled.map(function (it) {
+        return '<h3 class="sub-title">' + escapeHtml(it.label) + '</h3><p class="card-lead">' + escapeHtml(it.text) + "</p>";
+      }).join("");
+      if (hasTrailing) {
+        body += (filled.length ? '<h3 class="sub-title">Final Recommendation</h3>' : "") +
+          '<ol class="next-steps">' + g.trailingSteps.map(function (line) {
+            var parsed = parseLabel(line);
+            return "<li>" + labelBadge(parsed.label) + escapeHtml(parsed.text) + "</li>";
+          }).join("") + "</ol>";
+      }
+      if (headlineSource === null) {
+        headlineSource = filled.length ? filled[0].text : parseLabel(g.trailingSteps[0]).text;
+      }
+      entries.push({ title: g.title, owner: owner, body: body, flexHeight: true });
+    });
+
+    if (!entries.length) return [];
+    entries[0].headline = "Recommended first step: " + firstSentence(headlineSource, 100);
+    return entries;
   }
 
   function renderTeam(data) {
@@ -2253,11 +2427,18 @@
   // the end.
   function renderPersonSlideGallery(data, who) {
     var images = ((data.personSlides && data.personSlides[who]) || []).filter(isValidImageDataUrl);
-    if (!images.length) return null;
-    var body = '<div class="slide-images-grid">' + images.map(function (src, i) {
-      return '<div class="slide-image-item"><span class="slide-image-caption">Slide ' + (i + 1) + '</span><img class="slide-image" src="' + escapeHtml(src) + '" alt="Slide ' + (i + 1) + '"></div>';
-    }).join("") + "</div>";
-    return { title: ROLE_LABELS[who] + " — Slides", owner: ownerName(data, who), body: body };
+    if (!images.length) return [];
+    var owner = ownerName(data, who);
+    var baseTitle = ROLE_LABELS[who] + " — Slides";
+    // One image per card, not stacked, since an uploaded screenshot's own
+    // aspect ratio is outside this app's control — a fixed-height 16:9 card
+    // would clip a tall image, and several stacked would clip even a normal
+    // one. flexHeight lets each card grow to fit its own image.
+    return images.map(function (src, i) {
+      var caption = images.length > 1 ? "Slide " + (i + 1) + " of " + images.length : "Slide " + (i + 1);
+      var body = '<div class="slide-images-grid"><div class="slide-image-item"><span class="slide-image-caption">' + escapeHtml(caption) + '</span><img class="slide-image" src="' + escapeHtml(src) + '" alt="Slide ' + (i + 1) + '"></div></div>';
+      return { title: baseTitle, owner: owner, body: body, flexHeight: true };
+    });
   }
 
   function renderFooter() {
@@ -2265,6 +2446,28 @@
   }
 
   // ---------- top-level render ----------
+
+  // Normalizes a render function's result to an array of entries: null/[]
+  // for nothing to show, a single {title,...} object wrapped in an array, or
+  // an already-split array (renderPrototype, renderFollowUpSequence,
+  // renderNextSteps, renderPersonSlideGallery) passed through as-is.
+  function toEntryArray(x) {
+    if (!x) return [];
+    return Array.isArray(x) ? x : [x];
+  }
+
+  // Content long enough to risk overflowing a fixed 16:9 card, measured on
+  // the rendered body with markup stripped. Anything a splitting render
+  // function didn't already flag one way or the other (flexHeight left
+  // undefined) gets checked here — the general safety net for a single long
+  // block that isn't naturally repeatable (a sample proposal, testing
+  // notes, Responsible AI, a long team responsibility), where splitting into
+  // more slides would be worse than just letting one card grow.
+  var FLEX_HEIGHT_CHAR_THRESHOLD = 650;
+
+  function plainTextLength(html) {
+    return String(html || "").replace(/<[^>]*>/g, "").length;
+  }
 
   function buildPreviewHTML(data) {
     if (!hasAnyContent(data)) {
@@ -2277,7 +2480,10 @@
     // prototype, then sales content and Responsible AI, then testing and
     // measures, then the implementation plan — each step owner's own
     // uploaded slides sit right after their own content, not lumped at the
-    // end.
+    // end. Render functions for naturally repeatable content (prompts,
+    // follow-ups, implementation phases, uploaded slide images) return an
+    // array of entries instead of one — toEntryArray flattens whichever
+    // shape each one returned.
     var sections = [
       renderBusinessProblem(data),
       renderWorkflow(data),
@@ -2297,9 +2503,15 @@
       renderNextSteps(data),
       renderPersonSlideGallery(data, "implementation"),
       renderTeam(data)
-    ].filter(Boolean);
+    ].reduce(function (acc, x) { return acc.concat(toEntryArray(x)); }, []);
 
-    var confidentialTag = "Confidential — " + (data.clientName || data.teamName || "Draft");
+    sections.forEach(function (entry) {
+      if (entry.flexHeight === undefined) {
+        entry.flexHeight = plainTextLength(entry.body) > FLEX_HEIGHT_CHAR_THRESHOLD;
+      }
+    });
+
+    var confidentialTag = "Capstone Project — " + (data.clientName || data.teamName || "Draft");
     var agenda = renderAgenda(sections.map(function (s, i) { return { num: pad(i + 1), title: s.title }; }));
     var front = renderHero(data) + agenda + renderExecutiveSummary(data) + renderOverview(data);
     var body = sections.map(function (s, i) { return wrapSlide(pad(i + 1), s, confidentialTag); }).join("");
@@ -2343,6 +2555,7 @@
   // Renders the preview and autosaves in one step; use after any
   // programmatic change to the form (typing, upload, file import).
   function syncState() {
+    updateOwnershipHints();
     renderPreview();
     persistDraft(collectAllData());
   }
@@ -2535,6 +2748,18 @@
     document.getElementById("teamUploadSummary").hidden = true;
     document.getElementById("docPasteText").value = "";
     document.getElementById("teamDocPasteText").value = "";
+
+    // Sever the link to whatever cloud project was open. Without this, the
+    // next Save & Get Link would reuse the old share code and silently
+    // overwrite that project with this now-empty (then newly-built) one.
+    currentShareCode = "";
+    document.getElementById("shareLinkBox").hidden = true;
+    document.getElementById("shareLinkUrl").value = "";
+    if (window.history && window.history.replaceState && /[?&]p=/.test(location.search)) {
+      window.history.replaceState(null, "", location.pathname);
+    }
+
+    updateOwnershipHints();
     renderPreview();
     showStep(0);
   }
@@ -2709,6 +2934,7 @@
     ".prev-hero-sub { margin:12px 0 0; font-size:1.05rem; color:#c3ccdb; }",
     ".prev-hero-date { margin:14px 0 0; font-size:0.75rem; color:#8fa0bd; }",
     ".card { position:relative; background:#fff; border-radius:10px; box-shadow:0 1px 3px rgba(20,33,61,0.08), 0 8px 24px rgba(20,33,61,0.06); padding:36px 44px; aspect-ratio:16/9; display:flex; flex-direction:column; }",
+    ".card-flex { aspect-ratio:auto; min-height:420px; }",
     ".card-title { margin:0 0 16px; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#4a5568; display:flex; align-items:baseline; gap:8px; }",
     ".card-kicker { margin:0 0 8px; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#4a5568; display:flex; align-items:baseline; gap:8px; }",
     ".card-num { color:#fff; background:#a9803d; font-size:0.68rem; font-weight:700; padding:2px 6px; border-radius:4px; font-variant-numeric:tabular-nums; }",
@@ -2795,6 +3021,11 @@
 
   function init() {
     injectPreviewStyles();
+    updateOwnershipHints();
+    for (var oi = 1; oi <= TEAM_MEMBER_COUNT; oi++) {
+      var ownershipSel = document.getElementById("teamMember" + oi + "Ownership");
+      if (ownershipSel) ownershipSel.addEventListener("change", syncState);
+    }
 
     document.getElementById("btnClear").addEventListener("click", clearForm);
     document.getElementById("btnExport").addEventListener("click", exportHTML);
