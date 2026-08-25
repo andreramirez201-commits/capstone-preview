@@ -395,7 +395,12 @@
 
         <div class="wizard-step" data-step="0">
           <div class="upload-box">
-            <label class="upload-label" for="docUpload">Upload your project brief <span class="hint">(.docx, .txt, or .md works best)</span></label>
+            <label for="presetProjectSelect">Choose your assigned project <span class="hint">(optional — pre-fills a sample brief instead of uploading one)</span></label>
+            <select id="presetProjectSelect">
+              <option value="">— Select a sample project —</option>
+            </select>
+            <p style="margin:2px 0 0;font-size:0.78rem;color:var(--gray-400);">— or —</p>
+            <label class="upload-label" for="docUpload">Upload your own project brief <span class="hint">(.docx, .txt, or .md works best)</span></label>
             <input type="file" id="docUpload" accept=".txt,.md,.markdown,.docx,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
             <button type="button" id="btnTogglePaste" class="btn-secondary btn-small">Or paste the text instead</button>
             <div id="pasteArea" hidden style="width:100%;">
@@ -940,7 +945,7 @@
     PROMPT_FIELD_IDS.push("prompt" + pn + "Purpose", "prompt" + pn + "Text");
   }
 
-  var FIELD_IDS = ["teamNumber"].concat(TEAM_MEMBER_FIELD_IDS, [
+  var FIELD_IDS = ["presetProjectSelect", "teamNumber"].concat(TEAM_MEMBER_FIELD_IDS, [
     "teamName", "clientName", "objective",
     "problemSummary", "keyChallenges", "baselineMetrics", "currentWorkflow", "workflow", "beforeAfter",
     "solutionName", "solutionDescription"
@@ -1673,6 +1678,101 @@
 
     return result;
   }
+
+  // 7 fixed sample company briefs a team can pick instead of uploading one —
+  // the same scenarios (name, objective, real numbers) already used as the
+  // preset dropdown in the sibling Project Preview Generator, reshaped into
+  // this app's own fixed field set (problemSummary, baselineMetrics,
+  // beforeAfter, ...) rather than that app's generic per-project "Item N"
+  // fields, since here every field's meaning is fixed regardless of which
+  // brief is picked. Only fields a real brief of this shape would actually
+  // state are filled in — teamNumber and risksSafeguards are left for the
+  // team to fill themselves, same as a real upload with no "must address:"
+  // section would leave them.
+  var PRESET_BRIEFS = {
+    meridian: {
+      name: "Meridian Consulting Group — Sales Proposal & Client Communication Enhancement",
+      extracted: {
+        clientName: "Meridian Consulting Group",
+        objective: "Design and prototype an AI-powered sales enablement system that cuts proposal drafting time by 50%, standardizes compelling client-specific proposal language, and reduces follow-up response time to under 24 hours.",
+        problemSummary: "Meridian's sales team is losing deals not because of weak expertise, but because proposals take too long to produce and client follow-up is inconsistent. As the pipeline has grown, the eight-person sales team has been unable to keep writing quality and response speed at the level clients expect.",
+        baselineMetrics: "An average proposal takes 14 hours to draft from scratch\nProposal win rate has dropped from 32% to 24% over the past year\n35% of leads go more than 5 days without a follow-up email\nSales team spends approximately 40% of its time writing rather than selling",
+        beforeAfter: "Before: 14 hours to draft a proposal\nAfter: "
+      },
+      rawText: "Meridian Consulting Group — a 60-person B2B management consulting firm based in Chicago, serving mid-market manufacturing and logistics clients.\n\nBusiness Challenge: Meridian's sales team is losing deals not because of weak expertise, but because proposals take too long to produce and client follow-up is inconsistent. As the pipeline has grown, the eight-person sales team has been unable to keep writing quality and response speed at the level clients expect.\n\nCurrent State of Sales Communication:\n- An average proposal takes 14 hours to draft from scratch\n- Proposal win rate has dropped from 32% to 24% over the past year\n- 35% of leads go more than 5 days without a follow-up email\n- There is no standardized proposal template or messaging library\n- The sales team spends approximately 40% of its time writing rather than selling\n\nProject Objectives: Design and prototype an AI-powered sales enablement system that cuts proposal drafting time by 50%, standardizes compelling client-specific proposal language, and reduces follow-up response time to under 24 hours."
+    },
+    greenleaf: {
+      name: "GreenLeaf Home Services — Customer Support Enhancement",
+      extracted: {
+        clientName: "GreenLeaf Home Services",
+        objective: "Design and implement an AI-enhanced customer support workflow that reduces initial response time by 50%, improves request categorization accuracy, provides 24/7 initial support capabilities, and maintains a personalized customer experience.",
+        problemSummary: "GreenLeaf's rapid growth over the past five years has outpaced the capacity of its customer support infrastructure. The company currently operates with a nine-person support team working two overlapping shifts to cover inquiries from 7:00 AM to 9:00 PM MST, seven days a week.",
+        baselineMetrics: "Response time averages 4-6 hours across all channels, well above the 1-hour industry benchmark\nCustomer satisfaction (CSAT) scores have declined from 4.2 to 3.7 stars over the past 12 months\nAfter-hours callback queue regularly exceeds 40 messages\nApproximately 18% of daily inquiries are repeat contacts from unanswered requests",
+        beforeAfter: "Before: 4-6 hours average response time\nAfter: "
+      },
+      rawText: "GreenLeaf Home Services — a regional home maintenance and repair company with 150 employees serving residential customers in Colorado.\n\nBusiness Challenge: GreenLeaf's rapid growth over the past five years has outpaced the capacity of its customer support infrastructure. The company currently operates with a nine-person support team working two overlapping shifts to cover inquiries from 7:00 AM to 9:00 PM MST, seven days a week. Despite the team's dedication, the volume and variety of requests have created persistent operational bottlenecks.\n\nCurrent State of Customer Support:\n- Response time averages 4-6 hours across all channels, well above the 1-hour industry benchmark for home services\n- Customer satisfaction (CSAT) scores have declined from 4.2 to 3.7 stars over the past 12 months\n- The team manually categorizes and routes every inquiry — there is no automated triage system\n- After-hours inquiries (9:00 PM - 7:00 AM) are handled by voicemail and email only, with a next-morning callback queue that regularly exceeds 40 messages\n- Approximately 18% of daily inquiries are repeat contacts from customers following up on unanswered requests\n\nProject Objectives: Design and implement an AI-enhanced customer support workflow that reduces initial response time by 50%, improves request categorization accuracy, provides 24/7 initial support capabilities, and maintains a personalized customer experience."
+    },
+    brightpath: {
+      name: "BrightPath Technologies — Recruiting & Onboarding Acceleration",
+      extracted: {
+        clientName: "BrightPath Technologies",
+        objective: "Design and prototype an AI enhanced recruiting and onboarding workflow that reduces resume screening time by 70%, standardizes onboarding materials by role and department, improves time-to-hire by 30%, and maintains fair, unbiased, and legally compliant hiring practices.",
+        problemSummary: "BrightPath has grown from 40 to 90 employees in eighteen months and plans to add 30 more roles this year. The HR team, a lean two-person function, is struggling to keep pace with the volume of applications and the demands of getting new hires up to speed quickly.",
+        baselineMetrics: "Average time-to-hire is 47 days, well above the company's 30-day target\nHR manually reviews roughly 200 resumes for every open role\nNew hire onboarding consumes 3 full days of one-on-one time from managers per hire\n22% of new hires report feeling unprepared after their first week",
+        beforeAfter: "Before: 47 days average time-to-hire\nAfter: "
+      },
+      rawText: "BrightPath Technologies — a fast-growing SaaS startup with 90 employees, headquartered in Austin, Texas, building project-management software for construction firms.\n\nBusiness Challenge: BrightPath has grown from 40 to 90 employees in eighteen months and plans to add 30 more roles this year. The HR team, a lean two person function, is struggling to keep pace with the volume of applications and the demands of getting new hires up to speed quickly.\n\nCurrent State of Hiring & Onboarding:\n- Average time-to-hire is 47 days, well above the company's 30-day target\n- HR manually reviews roughly 200 resumes for every open role\n- New hire onboarding consumes 3 full days of one-on-one time from managers per hire\n- Onboarding materials are inconsistent and vary widely by department\n- 22% of new hires report feeling unprepared after their first week, based on recent pulse surveys\n\nProject Objectives: Design and prototype an AI enhanced recruiting and onboarding workflow that reduces resume screening time by 70%, standardizes onboarding materials by role and department, improves time-to-hire by 30%, and maintains fair, unbiased, and legally compliant hiring practices."
+    },
+    summit: {
+      name: "Summit Outdoor Gear — Content Marketing Acceleration",
+      extracted: {
+        clientName: "Summit Outdoor Gear",
+        objective: "Create an AI-powered content creation system that increases content output by 200% without additional headcount, maintains brand voice consistency, improves SEO performance, and reduces content creation time per piece by 60%.",
+        problemSummary: "Summit's marketing team currently produces 8-10 blog posts, 20 social media posts, and 4 email campaigns monthly. Competitors are publishing roughly 3x more content and ranking higher in search results. The 3-person marketing team is overwhelmed, leading to inconsistent posting schedules and missed opportunities during peak seasons.",
+        baselineMetrics: "8-10 blog posts, 20 social posts, and 4 email campaigns produced monthly\nCompetitors publish roughly 3x more content\nA 3-person team covers all content production"
+      },
+      rawText: "Summit Outdoor Gear — an e-commerce retailer specializing in hiking, camping, and outdoor equipment with annual revenue of $8M and a team of 35 employees.\n\nBusiness Challenge: Our marketing team currently produces 8-10 blog posts, 20 social media posts, and 4 email campaigns monthly. Competitors are publishing 3x more content and ranking higher in search results. Our small marketing team (3 people) is overwhelmed, leading to inconsistent posting schedules and missed opportunities during peak seasons.\n\nProject Objectives: Create an AI-powered content creation system that increases content output by 200% without additional headcount, maintains brand voice consistency, improves SEO performance, and reduces content creation time per piece by 60%."
+    },
+    horizon: {
+      name: "Horizon Corporate Events — Event Planning & Logistics Optimization",
+      extracted: {
+        clientName: "Horizon Corporate Events",
+        objective: "Design and prototype an AI-powered event planning system that reduces initial venue and vendor research time by 50%, automates the drafting of routine vendor communications and inbox management, generates creative event themes and schedules using AI as a collaboration tool, and maintains strict privacy regarding unannounced corporate client data.",
+        problemSummary: "Horizon's event planners are overwhelmed by the manual, routine tasks involved in organizing events. They spend excessive time researching venues, drafting repetitive vendor outreach emails, and making complex logistical decisions.",
+        baselineMetrics: "Planners spend an average of 12 hours manually researching venues and comparing vendor options for a single event\nDrafting customized vendor emails and follow-ups consumes 30% of a planner's week\nConsolidating vendor schedules into a client itinerary is done manually and is prone to errors",
+        beforeAfter: "Before: 12 hours researching venues per event\nAfter: "
+      },
+      rawText: "Horizon Corporate Events — a 45-person event planning agency in Seattle, organizing corporate retreats, conferences, and team-building offsites.\n\nBusiness Challenge: Horizon's event planners are overwhelmed by the manual, routine tasks involved in organizing events. They spend excessive time researching venues, drafting repetitive vendor outreach emails, and making complex logistical decisions. This administrative burden limits their ability to take on new clients and focus on big-picture creative event design.\n\nCurrent State of Event Planning:\n- Planners spend an average of 12 hours manually researching venues and comparing vendor options for a single event.\n- Drafting customized emails and following up with caterers, AV teams, and speakers consumes 30% of a planner's week.\n- Consolidating various vendor schedules into a cohesive client itinerary is done manually and is prone to errors.\n- The agency's flooded inbox often leads to delayed responses to vendor inquiries.\n- Planners struggle to find the time needed to brainstorm creative themes for clients.\n\nProject Objectives: Design and prototype an AI-powered event planning system that reduces initial venue and vendor research time by 50%, automates the drafting of routine vendor communications and inbox management, generates creative event themes and schedules using AI as a collaboration tool, and maintains strict privacy regarding unannounced corporate client data."
+    },
+    apex: {
+      name: "Apex Retail Analytics — Market Data Analysis & Reporting Enhancement",
+      extracted: {
+        clientName: "Apex Retail Analytics",
+        objective: "Design and prototype an AI-enhanced reporting workflow that cuts the time spent analyzing and summarizing dense spreadsheets by 60%, uses generative AI to rapidly draft detailed sales reports, effectively highlights key data insights for clients, and generates engaging presentation outlines based on data findings.",
+        problemSummary: "Apex's analysts spend the majority of their time executing routine tasks, specifically analyzing dense spreadsheets and summarizing financial notes. Because drafting detailed sales reports from scratch requires so much time and effort, analysts are struggling to keep up with client demand.",
+        baselineMetrics: "Analysts spend up to 15 hours a week manually summarizing notes and dense data spreadsheets\nDrafting a standard detailed sales report takes 3 full business days\nNo standardized process exists for quickly pulling high-level insights for rapid client requests",
+        beforeAfter: "Before: 15 hours a week summarizing data\nAfter: "
+      },
+      rawText: "Apex Retail Analytics — a 75-person consulting firm in Chicago that provides retail market insights and sales trend analysis for mid-sized retail chains.\n\nBusiness Challenge: Apex's analysts spend the majority of their time executing routine tasks, specifically analyzing dense spreadsheets and summarizing financial notes. Because drafting detailed sales reports from scratch requires so much time and effort, analysts are struggling to keep up with client demand and are missing opportunities to provide deeper, strategic consulting.\n\nCurrent State of Data Reporting:\n- Analysts spend up to 15 hours a week manually summarizing notes and dense data spreadsheets.\n- Drafting a standard detailed sales report takes 3 full business days.\n- Key insights are sometimes buried because analysts are fatigued by routine formatting tasks.\n- There is no standardized process for quickly pulling high-level insights for rapid client requests.\n- Junior analysts frequently struggle to format presentations engagingly.\n\nProject Objectives: Design and prototype an AI-enhanced reporting workflow that cuts the time spent analyzing and summarizing dense spreadsheets by 60%, uses generative AI to rapidly draft detailed sales reports, effectively highlights key data insights for clients, and generates engaging presentation outlines based on data findings."
+    },
+    nexus: {
+      name: "Nexus Design Studio — Project Management & Meeting Workflow Automation",
+      extracted: {
+        clientName: "Nexus Design Studio",
+        objective: "Design and prototype an AI productivity system that automates the summarizing of meeting notes and extraction of action items, reduces the time needed to draft project outlines and email responses by 70%, uses generative AI as a collaborative brainstorming tool for product features, and evaluates the optimal AI tools for different routine PM tasks.",
+        problemSummary: "The project management team at Nexus is drowning in administrative tasks. They spend too much time manually summarizing meeting notes, tracking action items, and drafting project kickoff outlines.",
+        baselineMetrics: "PMs spend 8-10 hours a week summarizing notes from client meetings and internal standups\nDrafting a comprehensive project kickoff outline takes a full day\nAction items are often lost from meeting transcripts",
+        beforeAfter: "Before: 8-10 hours a week summarizing meeting notes\nAfter: "
+      },
+      rawText: "Nexus Design Studio — a 50-person digital product design agency in New York, managing multiple concurrent app development projects for diverse clients.\n\nBusiness Challenge: The project management (PM) team at Nexus is drowning in administrative tasks. They spend too much time manually summarizing meeting notes, tracking action items, and drafting project kickoff outlines. This leaves them with never enough time to tackle the work that actually matters to the success of the app builds.\n\nCurrent State of Project Management Workflow:\n- PMs spend 8-10 hours a week just summarizing notes from client meetings and internal standups.\n- Drafting a comprehensive project kickoff outline takes a full day.\n- Action items are often lost because of the manual effort required to extract them from meeting transcripts.\n- The flooded PM inbox causes delays in responding to routine client status updates.\n- Creative brainstorming for app features is siloed and rarely collaborative.\n\nProject Objectives: Design and prototype an AI productivity system that automates the summarizing of meeting notes and extraction of action items, reduces the time needed to draft project outlines and email responses by 70%, uses generative AI as a collaborative brainstorming tool for product features, and evaluates the optimal AI tools for different routine PM tasks."
+    }
+  };
+
+  // Fields a preset ever sets — cleared before applying a newly-picked
+  // preset so switching from one sample brief to another can't leave a
+  // stale value from the first sitting in a field the second doesn't set
+  // (Summit, for instance, has no Before/After starting point).
+  var PRESET_CLEARABLE_FIELDS = ["clientName", "problemSummary", "objective", "baselineMetrics", "beforeAfter"];
 
   // Which single wizard field each kind of instructor question answers.
   // First matching pattern wins.
@@ -2748,6 +2848,7 @@
     document.getElementById("teamUploadSummary").hidden = true;
     document.getElementById("docPasteText").value = "";
     document.getElementById("teamDocPasteText").value = "";
+    document.getElementById("presetProjectSelect").value = "";
 
     // Sever the link to whatever cloud project was open. Without this, the
     // next Save & Get Link would reuse the old share code and silently
@@ -3040,6 +3141,23 @@
       }
     });
     document.getElementById("projectForm").addEventListener("input", syncState);
+
+    var presetSelect = document.getElementById("presetProjectSelect");
+    Object.keys(PRESET_BRIEFS).forEach(function (key) {
+      var opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = PRESET_BRIEFS[key].name;
+      presetSelect.appendChild(opt);
+    });
+    presetSelect.addEventListener("change", function () {
+      if (!this.value) return;
+      var preset = PRESET_BRIEFS[this.value];
+      PRESET_CLEARABLE_FIELDS.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+      finishUpload(preset.extracted, preset.rawText);
+    });
 
     document.getElementById("docUpload").addEventListener("change", function () {
       handleFileUpload(this.files[0]);
