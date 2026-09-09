@@ -134,7 +134,15 @@
     align-items:center; gap:5px; width:fit-content;
   }
   .prompt-status.draft{ background:var(--warn-soft); color:var(--warn); }
+  .prompt-status.tested{ background:var(--accent-soft); color:var(--accent); }
   .prompt-status.approved{ background:var(--good-soft); color:var(--good); }
+
+  .output-source{
+    font-size:11.5px; padding:4px 9px; border-radius:20px; display:inline-flex;
+    align-items:center; gap:5px; width:fit-content;
+  }
+  .output-source.live{ background:var(--good-soft); color:var(--good); }
+  .output-source.saved{ background:var(--warn-soft); color:var(--warn); }
 
   .loading{
     display:none; align-items:center; gap:8px; font-size:13px; color:var(--accent);
@@ -220,6 +228,47 @@
     border:1px solid var(--line); border-radius:7px; padding:8px 10px; font-size:13px; width:220px;
   }
 
+  /* ---------- prompt library modal ---------- */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(28,35,33,0.55);
+    align-items:flex-start; justify-content:center; padding:5vh 16px; z-index:50; overflow-y:auto;
+  }
+  .modal-overlay.on{ display:flex; }
+  .modal{
+    background:var(--paper); border:1px solid var(--line); border-radius:12px;
+    max-width:900px; width:100%; padding:22px 24px 28px; margin-bottom:5vh;
+  }
+  .modal-header{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:16px;
+    margin-bottom:6px;
+  }
+  .modal-header h2{ font-size:20px; }
+  .modal-sub{ font-size:13px; color:var(--ink-soft); margin:0 0 18px; max-width:68ch; }
+  .modal-close{
+    border:1px solid var(--line); background:var(--paper-raised); color:var(--ink);
+    border-radius:7px; width:32px; height:32px; font-size:16px; flex-shrink:0;
+  }
+  .library-actions{ margin-bottom:16px; }
+  .lib-card{
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:9px;
+    padding:16px 18px; margin-bottom:14px;
+  }
+  .lib-card-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+  .lib-card-head h3{ font-size:15.5px; }
+  .lib-num{
+    display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px;
+    border-radius:50%; background:var(--accent); color:#fff; font-size:11px; margin-right:7px;
+  }
+  .lib-owner{ font-size:12px; color:var(--ink-soft); }
+  .lib-field{ font-size:12.5px; margin:8px 0; }
+  .lib-field b{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); margin-bottom:3px; font-weight:600; }
+  .lib-prompt-text{
+    background:#fff; border:1px solid var(--line); border-radius:6px; padding:10px 12px;
+    font-family:"IBM Plex Mono", monospace; font-size:11.5px; white-space:pre-wrap; max-height:220px;
+    overflow:auto; color:var(--ink);
+  }
+  .lib-gap{ background:var(--warn-soft); color:var(--warn); border-radius:6px; padding:7px 10px; font-size:12px; }
+
   footer.bottom{
     margin-top:22px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
   }
@@ -254,6 +303,7 @@
       </p>
     </div>
     <div class="mode-toggle">
+      <button class="btn" id="libraryBtn" type="button">Prompt Library</button>
       <button class="btn" id="presentBtn" type="button">Presentation Mode</button>
       <button class="btn danger" id="resetBtn" type="button">Reset Demo</button>
     </div>
@@ -293,6 +343,7 @@
         <span>AI drafts. A person reviews, edits, and decides whether to send. Nothing here goes to a client unreviewed.</span>
       </div>
 
+      <span class="output-source" id="outputSourceBadge" style="display:none;"></span>
       <div class="output-preview" id="outputPreview"></div>
       <textarea class="field" id="outputEdit" placeholder="Run this stage, or edit the output here directly." style="min-height:140px;"></textarea>
 
@@ -369,25 +420,402 @@
   </footer>
 </div>
 
+<div class="modal-overlay" id="libraryOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2>Meridian Five-Prompt Library</h2>
+      </div>
+      <button class="modal-close" id="libraryCloseBtn" type="button" aria-label="Close">&times;</button>
+    </div>
+    <p class="modal-sub">
+      The same five prompts this demo runs, in order, straight from <span class="mono">api/generate.js</span>
+      &mdash; not a rewritten or separate copy. Each is an owner-tested prompt (self-tested and
+      self-reviewed by its owner against the Apex Manufacturing scenario); none have a confirmed
+      cross-team peer review yet. Copy a prompt to run it yourself in Claude or ChatGPT, or download
+      it as its own file.
+    </p>
+    <div class="row library-actions">
+      <a class="btn primary" href="meridian-prompt-library.md" download>Download Full Library (.md)</a>
+      <a class="btn" href="MERIDIAN_WORKFLOW_GUIDE.md" download>Download Workflow Guide (.md)</a>
+    </div>
+    <div id="libraryList"></div>
+  </div>
+</div>
+
 <script>
 (function(){
   "use strict";
 
   // Five stages, in order, matching the authoritative team table.
   // deps: which earlier stages' approved output this stage needs.
+  // promptStatus mirrors api/generate.js's STAGES config (2026-09-08): all
+  // five owners have supplied their actual tested prompt. 'team-tested' means
+  // owner-tested, not confirmed as the cross-team peer-reviewed final version.
   var STAGES = [
-    { id:'opportunity-summary', name:'Client Opportunity Summary', owner:'Ali', deps:[] },
-    { id:'missing-information', name:'Missing Information Detector', owner:'Angelica', deps:['opportunity-summary'] },
-    { id:'proposal-outline', name:'Proposal Outline Builder', owner:'Stephanie', deps:['opportunity-summary','missing-information'] },
-    { id:'proposal-writer', name:'Proposal Writer', owner:'Ashley', deps:['opportunity-summary','missing-information','proposal-outline'] },
-    { id:'follow-up', name:'Follow-Up Prompt', owner:'Edwin', deps:['opportunity-summary','missing-information','proposal-writer'] }
+    { id:'opportunity-summary', name:'Client Opportunity Summary', owner:'Ali', deps:[], promptStatus:'team-tested' },
+    { id:'missing-information', name:'Missing Information Detector', owner:'Angelica', deps:['opportunity-summary'], promptStatus:'team-tested' },
+    { id:'proposal-outline', name:'Proposal Outline Builder', owner:'Stephanie', deps:['opportunity-summary','missing-information'], promptStatus:'team-tested' },
+    { id:'proposal-writer', name:'Proposal Writer', owner:'Ashley', deps:['opportunity-summary','missing-information','proposal-outline'], promptStatus:'team-tested' },
+    { id:'follow-up', name:'Follow-Up Prompt', owner:'Edwin', deps:['opportunity-summary','missing-information','proposal-writer'], promptStatus:'team-tested' }
   ];
+  var PROMPT_STATUS_LABEL = { 'draft-placeholder':'Draft placeholder prompt', 'team-tested':'Owner-tested prompt', 'approved':'Approved prompt' };
+  var PROMPT_STATUS_CLASS = { 'draft-placeholder':'draft', 'team-tested':'tested', 'approved':'approved' };
+
+  // Real captured outputs from each owner's own successful test run, against
+  // the exact Apex demo notes above (Meridian_Team_Unedited_Responses.md,
+  // 2026-09-08). Genuine saved examples, not invented — safe to use as the
+  // "Use Saved Demo Output" fallback per stage. Verbatim, not touched up: Ali's
+  // capture is from her first-draft prompt (its "Known Constraints" line has
+  // the exact categorization slip she flagged and fixed in her final tested
+  // prompt) — left as actually captured rather than edited to match the
+  // now-live corrected prompt.
+  var SAVED_OUTPUTS = {
+    'opportunity-summary':
+`Opportunity Summary
+
+1. Client Organization
+Apex Manufacturing
+
+2. Industry
+Manufacturing
+
+3. Main Business Problem
+Production delays have increased over the last year.
+
+4. Desired Outcome
+Determine the causes of the production delays and recommend improvements.
+
+5. Key Pain Points
+Increasing production delays
+Possible employee scheduling issues
+Possible production planning issues
+
+6. Stakeholders
+Operations Director
+Management
+
+7. Timeline
+Would like to begin sometime this year.
+
+8. Known Constraints
+No budget was discussed.
+
+9. Unknown Information
+Project budget
+Specific project start date or deadline
+Exact causes of the production delays
+Scope and severity of scheduling issues
+Scope and severity of production planning issues
+Other stakeholders or decision-makers
+Specific success metrics or performance targets`,
+
+    'missing-information':
+`1. Information We Know
+Client: Apex Manufacturing
+Problem: Apex is experiencing increasing production delays.
+Suspected contributing factor: The Operations Director believes scheduling and production planning may be contributing to the delays.
+Desired outcome: Meridian should investigate the problem and recommend improvements.
+Timeline: Apex hopes to start sometime this year, but no specific start date has been established.
+Budget: Not discussed.
+Decision-maker/approvals: The Operations Director is involved, but it is unknown who else will approve the project.
+
+2. Information Still Missing
+Exact problem: What specifically is causing the production delays?
+Desired outcome: What measurable improvements does Apex expect from the project?
+Budget: What budget has been allocated or anticipated?
+Decision-maker: Who has final authority to approve the project?
+Other stakeholders: Who else will participate or be affected?
+Timeline: What specific start date and completion date are desired?
+Success criteria: How will Apex determine whether the project was successful?
+Scope: Which facilities, production lines, processes, or departments should Meridian investigate?
+Constraints: Are there operational, staffing, technology, data, or other limitations Meridian needs to consider?
+
+3. Questions the Salesperson Should Ask the Client
+Problem: "Can you describe the production delays in more detail? How frequently are they occurring, and where are they happening?"
+Root cause: "What evidence suggests that scheduling and production planning are contributing to the delays?"
+Desired outcome: "What would you like to be different after Meridian completes the project?"
+Success criteria: "What specific measures would tell you that the project was successful?"
+Scope: "Which production facilities, lines, products, or planning processes should be included in the investigation?"
+Decision-maker: "Who will make the final decision on whether to move forward with the project?"
+Stakeholders: "Who else should be involved in evaluating, approving, or participating in the project?"
+Budget: "Has Apex established a budget or investment range for this work?"
+Timeline: "When would you ideally like the project to begin, and is there a target completion date?"
+Constraints: "Are there any operational, staffing, technology, data-access, or other constraints we should account for?"
+Current process: "How are scheduling and production planning currently handled, and what systems or tools are being used?"
+Prior efforts: "Have you already tried any changes to address the production delays? If so, what were the results?"`,
+
+    'proposal-outline':
+`Consulting Proposal Outline
+Client: Apex Manufacturing
+Consulting Firm: Meridian Consulting Group
+Project Focus: Employee Scheduling & Production Planning Improvement
+
+1. Executive Summary
+Brief introduction to Apex Manufacturing and its current production-delay challenge. High-level focus on employee scheduling and production planning. Overall goal of reducing production delays and improving productivity.
+Needs Confirmation: Specific causes of delays, affected production areas, current productivity concerns, and desired business priorities.
+
+2. Client Challenge
+Current production delays and their impact on operations. Potential scheduling-related and production-planning issues.
+Needs Confirmation: Root causes, frequency and severity of delays, affected departments, current scheduling process, and existing production-planning procedures.
+
+3. Objectives
+Identify the primary causes of production delays. Evaluate current employee scheduling practices and production-planning processes. Recommend practical improvements.
+Needs Confirmation: Specific measurable objectives or performance targets Apex would like to establish.
+
+4. Recommended Approach
+Phase 1: Discovery & Assessment. Phase 2: Analysis. Phase 3: Recommendations.
+Needs Confirmation: Access to employees, supervisors, production data, scheduling records, production plans, and other operational information.
+
+5. Scope of Work
+Potentially included: employee scheduling, shift planning, production-planning processes, workflow coordination, stakeholder interviews.
+Needs Confirmation: Exact departments, facilities, processes, data sources, systems, and operational areas included in the engagement.
+
+6. Deliverables
+Current-state assessment, summary of challenges and bottlenecks, recommended scheduling and production-planning improvements, final findings presentation.
+Needs Confirmation: Final deliverable format, level of detail, and whether implementation support is expected.
+
+7. Timeline
+Project kickoff, discovery, assessment, analysis, recommendations, final presentation.
+Needs Confirmation: Exact project start date, project duration, availability of Apex personnel, and required completion date.
+
+8. Expected Outcomes
+Greater visibility into causes of delays, identification of bottlenecks, practical recommendations for workflow efficiency.
+Needs Confirmation: Specific performance measures Apex will use to evaluate success. Any projected savings or productivity improvements should only be included once supported by confirmed data.
+
+9. Investment
+Consulting fees, applicable expenses, payment structure, optional follow-up services.
+Needs Confirmation: Project budget has not been established.
+
+10. Next Steps
+Apex reviews the proposed approach and scope, confirms objectives, scope, start date, budget, and stakeholders, then schedules kickoff.
+Needs Confirmation: Apex's preferred start date, project stakeholders, decision-makers, budget, and approval process.`,
+
+    'proposal-writer':
+`Apex Manufacturing — Proposal
+
+Client Challenge
+Apex Manufacturing is experiencing increasing production delays that may be affecting productivity and operational performance.
+
+Project Objective
+Meridian Consulting Group will work with Apex Manufacturing to identify the causes of the production delays and recommend practical improvements.
+
+Proposed Approach
+Meridian will evaluate possible areas that may be contributing to the delays, including employee scheduling and production planning. These areas will be investigated as potential contributors and should not be considered confirmed causes until reviewed.
+
+Desired Outcome
+The engagement will focus on identifying opportunities that may help reduce production delays and improve productivity.
+
+Budget
+Needs Confirmation
+
+Timeline
+Apex Manufacturing would like to begin the project this year.
+Exact start date: Needs Confirmation
+
+Next Steps
+Confirm the project budget, exact start date, and any additional information required before finalizing the engagement.`,
+
+    'follow-up':
+`MESSAGE 1
+Hi [Operations Director Name],
+
+Thanks for reaching out to Meridian regarding the production delays at Apex Manufacturing. I apologize for the delay in getting back to you after our initial contact — I want to make sure we address this properly.
+
+Given your interest in examining production planning and employee scheduling to boost productivity, I'd like to schedule a brief follow-up call. Are you available for 15 minutes this week to discuss how we might investigate these areas together?
+
+Best,
+[Your Name]
+Meridian
+
+MESSAGE 2
+Hi [Operations Director Name],
+
+I wanted to check back in regarding the scheduling and production planning challenges at Apex Manufacturing.
+
+If reducing those production delays is still a priority for your team, let me know if you have 10-15 minutes open later this week for a quick discussion on next steps.
+
+Best,
+[Your Name]
+Meridian
+
+MESSAGE 3
+Hi [Operations Director Name],
+
+I'm following up one last time regarding the production planning review for Apex Manufacturing. I don't want to crowd your inbox if your timeline has shifted or if you've already addressed the delay issues internally.
+
+If you're still open to scheduling a meeting to explore solutions with Meridian, feel free to reply with a day that works for you. Otherwise, I'll step back for now.
+
+Best regards,
+[Your Name]
+Meridian`
+  };
   var DEP_LABELS = {
     'opportunity-summary': 'Approved Opportunity Summary',
     'missing-information': 'Missing-Information Review & Confirmed Answers',
     'proposal-outline': 'Approved Proposal Outline',
     'proposal-writer': 'Approved Proposal'
   };
+
+  // Prompt Library content — kept byte-identical to each stage's promptTemplate
+  // in api/generate.js (placeholders substituted for the ${...} interpolation)
+  // and to meridian-prompt-library.md. If a prompt's wording changes in any one
+  // of these three places, update the other two in the same commit.
+  var PROMPT_LIBRARY = [
+    {
+      id: 'opportunity-summary',
+      name: 'Client Opportunity Summary',
+      owner: 'Ali',
+      purpose: "Turn raw discovery notes, emails, or CRM notes into a clean, structured opportunity summary — the factual foundation every later stage builds on.",
+      whenToUse: "Right after a discovery call, or whenever new client notes come in, before any proposal work starts.",
+      requiredInput: "Sales opportunity notes: discovery call notes, emails, or CRM notes.",
+      promptText:
+`You are assisting Meridian Consulting with reviewing sales opportunity notes.
+
+Analyze the notes provided and create a short, organized Opportunity Summary using only the information contained in the notes.
+
+Include the following sections:
+
+1. Client Organization
+2. Industry
+3. Main Business Problem
+4. Desired Outcome
+5. Key Pain Points
+6. Stakeholders
+7. Timeline
+8. Known Constraints
+9. Unknown Information
+
+Follow these rules:
+
+Use only information supported by the notes.
+Do not make up, assume, or infer facts that are not provided.
+Preserve uncertainty. If the notes describe something as possible, suspected, or believed, do not present it as a confirmed fact.
+A Known Constraint must be an actual limitation or restriction stated in the notes, such as a fixed budget, deadline, staffing limitation, regulatory requirement, or technology restriction.
+If information was not discussed or provided, such as an unspecified budget or deadline, list it under Unknown Information, not Known Constraints.
+If there are no known constraints, state "None identified in the provided notes."
+Do not repeat the same information in multiple sections unless necessary for clarity.
+Keep the summary concise and easy for a salesperson or consultant to review.
+
+Sales Opportunity Notes:
+[PASTE DISCOVERY NOTES, EMAILS, OR CRM NOTES HERE]`,
+      expectedOutput: "A 9-section structured summary (Client Organization through Unknown Information). Real captured example available in the demo's “Use Saved Demo Output” fallback for this stage.",
+      status: "Owner-tested (Ali). Self-tested and self-reviewed; one revision made — an earlier draft miscategorized an unstated budget as a “Known Constraint” instead of “Unknown Information,” fixed in the version above."
+    },
+    {
+      id: 'missing-information',
+      name: 'Missing Information Detector',
+      owner: 'Angelica',
+      purpose: "Before Meridian writes a proposal, check what's still unknown and generate the questions a salesperson should ask to close those gaps.",
+      whenToUse: "Right after Stage 1's opportunity summary is approved, before building the proposal outline.",
+      requiredInput: "The approved Opportunity Summary from Stage 1.",
+      promptText:
+`Analyze the following opportunity details to identify known information and unknown missing information, such as the client's exact problem, desired outcome, budget, decision maker, other stakeholders, timeline, success criteria, scope, and constraints, and then generate a list of actionable questions the salesperson should ask the client to gather those details.
+
+Opportunity details:
+[PASTE APPROVED OPPORTUNITY SUMMARY HERE]`,
+      expectedOutput: "Three sections: Information We Know, Information Still Missing, and Questions the Salesperson Should Ask the Client.",
+      status: "Owner-tested (Angelica). Self-tested and self-reviewed; no revision made — owner's own review found it correctly separated known from unknown information without inventing anything."
+    },
+    {
+      id: 'proposal-outline',
+      name: 'Proposal Outline Builder',
+      owner: 'Stephanie',
+      purpose: "Structure the proposal into sections before anyone writes full prose — organizes the case and flags gaps, without writing the proposal itself.",
+      whenToUse: "After the missing-information review, once the salesperson has confirmed what they can from the client.",
+      requiredInput: "The approved Opportunity Summary (Stage 1) and the Missing-Information review / confirmed answers (Stage 2).",
+      promptText:
+`Create a professional consulting proposal outline for the following client opportunity.
+
+For each section, briefly explain what information should be included. Customize the outline to the client's business problem. Do not write the full proposal. Do not invent prices, timelines, statistics, results, or commitments. Clearly label missing information as "Needs Confirmation."
+
+Client opportunity:
+[PASTE APPROVED OPPORTUNITY SUMMARY HERE]
+
+[PASTE MISSING-INFORMATION REVIEW / CONFIRMED ANSWERS HERE]
+
+Create an appropriate consulting proposal outline that may include:
+Executive Summary
+Client Challenge
+Objectives
+Recommended Approach
+Scope of Work
+Deliverables
+Timeline
+Expected Outcomes
+Investment
+Next Steps`,
+      expectedOutput: "A 10-section outline, each section flagged “Needs Confirmation” where the underlying fact isn't yet known.",
+      status: "Owner-tested (Stephanie) — real Apex-scenario output is on file. Gap: this prompt was supplied directly rather than through the team's shared testing document, so there is no documented self-review write-up (what worked / what was changed) for this stage. Confirm with Stephanie before presenting this stage as fully reviewed."
+    },
+    {
+      id: 'proposal-writer',
+      name: 'Proposal Writer',
+      owner: 'Ashley',
+      purpose: "Turn the approved client information and outline into a short, client-ready proposal draft.",
+      whenToUse: "After the outline is approved, before anything goes to the client.",
+      requiredInput: "Approved Client Information (Stages 1–2 combined) and the Approved Proposal Outline (Stage 3).",
+      promptText:
+`Role:
+
+You are an expert B2B management consulting proposal writer.
+
+Task:
+
+Using the approved client information and proposal outline provided, write a short, professional, client-specific proposal for Meridian Consulting Group. Focus on the client's business problem and clearly explain Meridian's proposed approach.
+
+Context:
+
+Meridian Consulting Group wants to create strong proposals more efficiently while maintaining professional, natural, accurate, and client-focused communication. Avoid generic, robotic, or unnecessary AI-sounding language. Clearly distinguish confirmed client information from possible areas Meridian may investigate. A Meridian salesperson must review and approve the final proposal before it is sent to the client.
+
+Resource:
+
+Use only the approved client information and approved proposal outline provided. Never invent facts, statistics, prices, dates, timelines, causes, or results. Never guarantee outcomes. Do not present a possible cause or area of investigation as confirmed information. If anything is missing, uncertain, or not approved, clearly label it "Needs Confirmation."
+
+Approved Client Information:
+[PASTE APPROVED CLIENT INFORMATION HERE]
+
+Proposal Outline:
+[PASTE APPROVED PROPOSAL OUTLINE HERE]`,
+      expectedOutput: "A short client-facing proposal draft: Client Challenge, Project Objective, Proposed Approach, Desired Outcome, Budget, Timeline, Next Steps.",
+      status: "Owner-tested (Ashley). Self-tested and self-reviewed; one revision made — the first draft didn't clearly separate a possible cause under investigation from a confirmed fact, fixed in the version above."
+    },
+    {
+      id: 'follow-up',
+      name: 'Follow-Up Prompt',
+      owner: 'Edwin',
+      purpose: "Draft a 3-message follow-up sequence for a lead that's gone quiet after a proposal.",
+      whenToUse: "After a proposal is sent and the client hasn't responded.",
+      requiredInput: "Client and proposal information for this engagement, and the sent proposal (Stage 4 output).",
+      promptText:
+`Persona: you are a prompt professional assisting a salesperson from meridian, a b2b business.
+
+Context: the number of clients are dropping due to delays in your responses after clients initial messages. All clients initiates conversion but its been over a week since and the salesperson has yet to answer. The salesperson does not want to lose anymore customers and potentially gain new customers.
+
+Task: create three messages to increase efficiency of the transaction. Messages should be about:
+
+MESSAGE 1: Short follow-up after the initial conversation.
+MESSAGE 2: follow-up if the client hasn't responded.
+MESSAGE 3: Final professional follow-up
+
+Messages should:
+- Sound human
+- Be concise
+- Reference the client's problem
+- Provide a clear next step
+- Avoid being pushy
+- Avoid making promises
+- Never invent client information
+
+Client and proposal information for this engagement:
+[PASTE CLIENT AND PROPOSAL INFORMATION HERE]
+
+Sent proposal:
+[PASTE SENT PROPOSAL HERE]`,
+      expectedOutput: "Three follow-up messages (Day-1 style short check-in, Day-4 style value-add, Day-9 style final message).",
+      status: "Owner-tested (Edwin). Self-tested and self-reviewed; no revision made (“its good”)."
+    }
+  ];
 
   // Canonical Apex Manufacturing test case — exact wording from the team's
   // shared testing instructions (Apex-Prompt-Testing-Instructions-Team-
@@ -419,6 +847,7 @@
     promptStatusChip: document.getElementById('promptStatusChip'),
     loadingIndicator: document.getElementById('loadingIndicator'),
     errorBox: document.getElementById('errorBox'),
+    outputSourceBadge: document.getElementById('outputSourceBadge'),
     outputPreview: document.getElementById('outputPreview'),
     outputEdit: document.getElementById('outputEdit'),
     missingInfoAnswersWrap: document.getElementById('missingInfoAnswersWrap'),
@@ -486,8 +915,8 @@
   function renderStagePanel(){
     var stage = currentStage();
     els.inputTitle.textContent = stage.name + ' (' + stage.owner + ') — Input';
-    els.promptStatusChip.textContent = 'Draft placeholder prompt';
-    els.promptStatusChip.className = 'prompt-status draft';
+    els.promptStatusChip.textContent = PROMPT_STATUS_LABEL[stage.promptStatus] || 'Draft placeholder prompt';
+    els.promptStatusChip.className = 'prompt-status ' + (PROMPT_STATUS_CLASS[stage.promptStatus] || 'draft');
 
     // Stage 1: free-text notes. Stage 2+: read-only recap of every stage this
     // one depends on.
@@ -523,10 +952,16 @@
     renderPreview(els.outputEdit.value);
     els.approveBtn.disabled = !els.outputEdit.value.trim();
     els.copyBtn.disabled = !els.outputEdit.value.trim();
+    els.outputSourceBadge.style.display = 'none';
     hideError();
 
-    els.savedFallbackLabel.textContent = 'Saved Apex output: not yet available for this stage.';
-    els.savedFallbackBtn.disabled = true;
+    if (SAVED_OUTPUTS[stage.id]){
+      els.savedFallbackLabel.textContent = 'Saved Apex output: available for this stage.';
+      els.savedFallbackBtn.disabled = false;
+    } else {
+      els.savedFallbackLabel.textContent = 'Saved Apex output: not yet available for this stage.';
+      els.savedFallbackBtn.disabled = true;
+    }
 
     renderStageBar();
   }
@@ -583,6 +1018,7 @@
     hideError();
     setLoading(true);
     els.outputEdit.value = '';
+    els.outputSourceBadge.style.display = 'none';
     renderPreview('');
 
     fetch('/api/generate', {
@@ -602,11 +1038,28 @@
       renderPreview(output);
       els.approveBtn.disabled = !output;
       els.copyBtn.disabled = !output;
+      els.outputSourceBadge.textContent = 'Live AI output';
+      els.outputSourceBadge.className = 'output-source live';
+      els.outputSourceBadge.style.display = 'inline-flex';
     }).catch(function(){
       setLoading(false);
       showError('Could not reach the server. Check your connection and try again, or use the saved fallback output if presenting live.');
     });
   }
+
+  els.savedFallbackBtn.addEventListener('click', function(){
+    var stage = currentStage();
+    var saved = SAVED_OUTPUTS[stage.id];
+    if (!saved) return;
+    hideError();
+    els.outputEdit.value = saved;
+    renderPreview(saved);
+    els.approveBtn.disabled = false;
+    els.copyBtn.disabled = false;
+    els.outputSourceBadge.textContent = 'Saved example — not generated live';
+    els.outputSourceBadge.className = 'output-source saved';
+    els.outputSourceBadge.style.display = 'inline-flex';
+  });
 
   els.outputEdit.addEventListener('input', function(){
     renderPreview(els.outputEdit.value);
@@ -814,6 +1267,105 @@
   });
 
   window.addEventListener('focus', updateTracker);
+
+  // ---------------- Prompt Library modal ----------------
+  var libEls = {
+    btn: document.getElementById('libraryBtn'),
+    overlay: document.getElementById('libraryOverlay'),
+    closeBtn: document.getElementById('libraryCloseBtn'),
+    list: document.getElementById('libraryList')
+  };
+
+  function downloadText(filename, text){
+    var blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function promptToMarkdown(p){
+    return '# ' + p.name + ' (' + p.owner + ')\n\n' +
+      '**Purpose:** ' + p.purpose + '\n\n' +
+      '**When to use:** ' + p.whenToUse + '\n\n' +
+      '**Required input:** ' + p.requiredInput + '\n\n' +
+      '**Status:** ' + p.status + '\n\n' +
+      '## Prompt\n\n```\n' + p.promptText + '\n```\n\n' +
+      '## Expected Output\n\n' + p.expectedOutput + '\n';
+  }
+
+  function renderLibrary(){
+    libEls.list.innerHTML = '';
+    PROMPT_LIBRARY.forEach(function(p, i){
+      var card = document.createElement('div');
+      card.className = 'lib-card';
+      var gapHtml = /Gap:/i.test(p.status)
+        ? '<div class="lib-gap">' + escapeHtml(p.status) + '</div>'
+        : '<div class="lib-field"><b>Status</b>' + escapeHtml(p.status) + '</div>';
+      card.innerHTML =
+        '<div class="lib-card-head">' +
+          '<h3><span class="lib-num">' + (i+1) + '</span>' + escapeHtml(p.name) + '</h3>' +
+          '<span class="lib-owner">Owner: ' + escapeHtml(p.owner) + '</span>' +
+        '</div>' +
+        '<div class="lib-field"><b>Purpose</b>' + escapeHtml(p.purpose) + '</div>' +
+        '<div class="lib-field"><b>When to use it</b>' + escapeHtml(p.whenToUse) + '</div>' +
+        '<div class="lib-field"><b>Required input</b>' + escapeHtml(p.requiredInput) + '</div>' +
+        '<div class="lib-field"><b>Full prompt text</b><div class="lib-prompt-text"></div></div>' +
+        '<div class="lib-field"><b>Expected output</b>' + escapeHtml(p.expectedOutput) + '</div>' +
+        gapHtml +
+        '<div class="row" style="margin-top:10px;">' +
+          '<button class="btn small copy-prompt-btn" type="button">Copy Prompt</button>' +
+          '<button class="btn ghost small download-prompt-btn" type="button">Download .md</button>' +
+        '</div>';
+      card.querySelector('.lib-prompt-text').textContent = p.promptText;
+      card.querySelector('.copy-prompt-btn').addEventListener('click', function(e){
+        var btn = e.currentTarget;
+        var text = p.promptText;
+        if (navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(text);
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand('copy'); document.body.removeChild(ta);
+        }
+        var original = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(function(){ btn.textContent = original; }, 1200);
+      });
+      card.querySelector('.download-prompt-btn').addEventListener('click', function(){
+        var slug = p.id + '-' + p.owner.toLowerCase();
+        downloadText('meridian-prompt-' + slug + '.md', promptToMarkdown(p));
+      });
+      libEls.list.appendChild(card);
+    });
+  }
+
+  function openLibrary(){
+    renderLibrary();
+    libEls.overlay.classList.add('on');
+  }
+  function closeLibrary(){
+    libEls.overlay.classList.remove('on');
+  }
+
+  libEls.btn.addEventListener('click', openLibrary);
+  libEls.closeBtn.addEventListener('click', closeLibrary);
+  libEls.overlay.addEventListener('click', function(e){
+    if (e.target === libEls.overlay) closeLibrary();
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closeLibrary();
+  });
+
+  // Deep link support so the pitch deck (or any link) can open straight to
+  // the library: meridian-proposal-writer.html?library=1 or #library
+  if (/library=1/.test(window.location.search) || window.location.hash === '#library'){
+    openLibrary();
+  }
 
   renderStagePanel();
   updateTracker();

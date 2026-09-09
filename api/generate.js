@@ -3,14 +3,16 @@
 // Zero-config Vercel Node.js function (CommonJS, no package.json/build step,
 // matching the rest of this repo). Never exposes ANTHROPIC_API_KEY to the client.
 //
-// PROMPT STATUS: every entry in STAGES below is a DRAFT PLACEHOLDER written from
-// each owner's actual assignment brief (~/Downloads/Meridian_Team_Assignments,
-// Aug 30 2026) — not the team's own tested prompt. As of 2026-09-08 every one of
-// the five assignment files still has an unfilled "[PASTE YOUR PROMPT HERE]" /
-// "[PASTE FINAL PROMPT HERE]" field; the in-class peer-review pass that produces
-// the real prompts (Apex-Prompt-Testing-Instructions-Team-Examples.pptx) has not
-// happened yet. Swap each stage's `promptTemplate` body for the team's final
-// TASK/CONTEXT/REFERENCES/OUTPUT text when it lands — nothing else needs to change.
+// PROMPT STATUS (2026-09-08): four of five stages run each owner's actual
+// final-tested prompt (Ali, Angelica, Stephanie, Ashley, Edwin — sourced from
+// Meridian_Team_Unedited_Responses.md and, for Stephanie, sent directly by
+// André since that doc only had her AI response, not her prompt). These are
+// each owner's own tested prompt, not necessarily the cross-team peer-
+// reviewed final version (Apex-Prompt-Testing-Instructions-Team-Examples.pptx
+// describes a later peer-review pass whose completion is unconfirmed) — see
+// each stage's `promptStatus` ('team-tested', not 'approved'). Every stage
+// currently has a real tested prompt; none are draft placeholders as of this
+// date.
 
 const DEFAULT_MODEL = 'claude-sonnet-5';
 const DEFAULT_TIMEOUT_MS = 30000;
@@ -64,177 +66,162 @@ const SHARED_RULES =
 // the fields it actually needs. The five stages and their owners match the
 // authoritative table: Ali -> Angelica -> Stephanie -> Ashley -> Edwin.
 const STAGES = {
+  // Ali's actual final-tested prompt, from Meridian_Team_Unedited_Responses.md
+  // (2026-09-08). Wording preserved verbatim; only the hardcoded Apex example
+  // notes at the end were swapped for the live ${opportunityNotes} input.
   'opportunity-summary': {
     name: 'Client Opportunity Summary',
     owner: 'Ali',
     order: 1,
-    promptStatus: 'draft-placeholder',
+    promptStatus: 'team-tested',
     requires: ['opportunityNotes'],
-    promptTemplate: ({ opportunityNotes }) => `TASK:
-You are a sales operations analyst for Meridian Consulting Group. Turn the
-discovery notes below into a short, organized summary of the sales opportunity.
+    promptTemplate: ({ opportunityNotes }) => `You are assisting Meridian Consulting with reviewing sales opportunity notes.
 
-[DRAFT PLACEHOLDER — Ali's assignment brief, not her tested prompt. Replace
-with her final TASK/CONTEXT/REFERENCES/OUTPUT text once the team has tested
-and peer-reviewed it.]
+Analyze the notes provided and create a short, organized Opportunity Summary using only the information contained in the notes.
 
-CONTEXT:
-- ${MERIDIAN_CONTEXT}
-- This is Stage 1 of a five-stage chained workflow; its output becomes the
-  required input to Stage 2 (Missing Information Detector).
-- Only use what is explicitly stated in the notes provided.
+Include the following sections:
 
-REFERENCES:
-Discovery notes:
-${opportunityNotes}
+1. Client Organization
+2. Industry
+3. Main Business Problem
+4. Desired Outcome
+5. Key Pain Points
+6. Stakeholders
+7. Timeline
+8. Known Constraints
+9. Unknown Information
 
-OUTPUT REQUIREMENTS:
-Identify: Client organization; Industry; Main business problem; Desired
-outcome; Key pain points; Stakeholders; Timeline; Known constraints;
-Information that is unknown.
-${SHARED_RULES}`,
+Follow these rules:
+
+Use only information supported by the notes.
+Do not make up, assume, or infer facts that are not provided.
+Preserve uncertainty. If the notes describe something as possible, suspected, or believed, do not present it as a confirmed fact.
+A Known Constraint must be an actual limitation or restriction stated in the notes, such as a fixed budget, deadline, staffing limitation, regulatory requirement, or technology restriction.
+If information was not discussed or provided, such as an unspecified budget or deadline, list it under Unknown Information, not Known Constraints.
+If there are no known constraints, state "None identified in the provided notes."
+Do not repeat the same information in multiple sections unless necessary for clarity.
+Keep the summary concise and easy for a salesperson or consultant to review.
+
+Sales Opportunity Notes:
+${opportunityNotes}`,
   },
 
+  // Angelica's tested prompt (unchanged after her own review — "the prompt is
+  // fine how it is"), from Meridian_Team_Unedited_Responses.md (2026-09-08).
+  // Her file has no separate REFERENCES placeholder, so the approved summary
+  // is appended below her instruction exactly as it was pasted during testing.
   'missing-information': {
     name: 'Missing Information Detector',
     owner: 'Angelica',
     order: 2,
-    promptStatus: 'draft-placeholder',
+    promptStatus: 'team-tested',
     requires: ['approvedSummary'],
-    promptTemplate: ({ approvedSummary }) => `TASK:
-You are a sales operations analyst for Meridian Consulting Group. Before a
-proposal is written, identify what the salesperson still needs to learn from
-the client.
+    promptTemplate: ({ approvedSummary }) => `Analyze the following opportunity details to identify known information and unknown missing information, such as the client's exact problem, desired outcome, budget, decision maker, other stakeholders, timeline, success criteria, scope, and constraints, and then generate a list of actionable questions the salesperson should ask the client to gather those details.
 
-[DRAFT PLACEHOLDER — Angelica's assignment brief, not her tested prompt.
-Replace with her final TASK/CONTEXT/REFERENCES/OUTPUT text once the team has
-tested and peer-reviewed it.]
-
-CONTEXT:
-- ${MERIDIAN_CONTEXT}
-- Previous step: an approved opportunity summary (Stage 1).
-- A human will confirm or leave unresolved every item you flag — do not guess
-  on their behalf.
-
-REFERENCES:
-Approved opportunity summary:
-${approvedSummary}
-
-OUTPUT REQUIREMENTS:
-Check for missing: Client's exact problem; Desired outcome; Budget; Decision
-maker; Other stakeholders; Timeline; Success criteria; Scope; Constraints.
-Clearly separate KNOWN facts (already confirmed) from UNKNOWN facts (missing).
-Suggest specific questions the salesperson could ask the client for each
-unknown item.
-${SHARED_RULES}`,
+Opportunity details:
+${approvedSummary}`,
   },
 
+  // Stephanie's actual prompt, sent directly by André 2026-09-08 (not in
+  // Meridian_Team_Unedited_Responses.md, which only had her AI response).
+  // Wording preserved verbatim; her fixed "Client opportunity" paragraph was
+  // written for the Apex test case, so the live approved summary + missing-
+  // information review are substituted in as that same block.
   'proposal-outline': {
     name: 'Proposal Outline Builder',
     owner: 'Stephanie',
     order: 3,
-    promptStatus: 'draft-placeholder',
+    promptStatus: 'team-tested',
     requires: ['approvedSummary', 'approvedMissingInfo'],
-    promptTemplate: ({ approvedSummary, approvedMissingInfo }) => `TASK:
-You are an expert B2B consulting proposal writer for Meridian Consulting
-Group. Build a proposal outline — the STRUCTURE only, not the finished
-proposal — from the client information provided.
+    promptTemplate: ({ approvedSummary, approvedMissingInfo }) => `Create a professional consulting proposal outline for the following client opportunity.
 
-[DRAFT PLACEHOLDER — Stephanie's assignment brief, not her tested prompt.
-Replace with her final TASK/CONTEXT/REFERENCES/OUTPUT text once the team has
-tested and peer-reviewed it.]
+For each section, briefly explain what information should be included. Customize the outline to the client's business problem. Do not write the full proposal. Do not invent prices, timelines, statistics, results, or commitments. Clearly label missing information as "Needs Confirmation."
 
-CONTEXT:
-- ${MERIDIAN_CONTEXT}
-- Previous steps: an approved opportunity summary (Stage 1) and its missing-
-  information review with any confirmed answers (Stage 2).
-- You are not writing the entire proposal.
-
-REFERENCES:
-Approved opportunity summary:
+Client opportunity:
 ${approvedSummary}
 
-Missing-information review and confirmed answers:
 ${approvedMissingInfo}
 
-OUTPUT REQUIREMENTS:
-Create an outline reflecting this specific client's problem. Possible
-sections: Executive Summary; Client Challenge; Objectives; Recommended
-Approach; Scope of Work; Deliverables; Timeline; Expected Outcomes;
-Investment; Next Steps. Do not invent prices, timelines, results, or
-commitments that were not provided.
-${SHARED_RULES}`,
+Create an appropriate consulting proposal outline that may include:
+Executive Summary
+Client Challenge
+Objectives
+Recommended Approach
+Scope of Work
+Deliverables
+Timeline
+Expected Outcomes
+Investment
+Next Steps`,
   },
 
+  // Ashley's actual final-tested prompt, from Meridian_Team_Unedited_Responses.md
+  // (2026-09-08). Wording preserved verbatim; her Role/Task/Context/Resource
+  // structure already has the two input slots this stage needs.
   'proposal-writer': {
     name: 'Proposal Writer',
     owner: 'Ashley',
     order: 4,
-    promptStatus: 'draft-placeholder',
+    promptStatus: 'team-tested',
     requires: ['approvedClientInfo', 'approvedOutline'],
-    promptTemplate: ({ approvedClientInfo, approvedOutline }) => `TASK:
-You are an expert B2B consulting proposal writer for Meridian Consulting
-Group. Turn the approved client information and outline into professional
-proposal content.
+    promptTemplate: ({ approvedClientInfo, approvedOutline }) => `Role:
 
-[DRAFT PLACEHOLDER — Ashley's assignment brief, not her tested prompt.
-Replace with her final TASK/CONTEXT/REFERENCES/OUTPUT text once the team has
-tested and peer-reviewed it.]
+You are an expert B2B management consulting proposal writer.
 
-CONTEXT:
-- ${MERIDIAN_CONTEXT}
-- Previous steps: approved client information (Stage 1 + Stage 2) and an
-  approved proposal outline (Stage 3).
+Task:
 
-REFERENCES:
-Approved client information:
+Using the approved client information and proposal outline provided, write a short, professional, client-specific proposal for Meridian Consulting Group. Focus on the client's business problem and clearly explain Meridian's proposed approach.
+
+Context:
+
+Meridian Consulting Group wants to create strong proposals more efficiently while maintaining professional, natural, accurate, and client-focused communication. Avoid generic, robotic, or unnecessary AI-sounding language. Clearly distinguish confirmed client information from possible areas Meridian may investigate. A Meridian salesperson must review and approve the final proposal before it is sent to the client.
+
+Resource:
+
+Use only the approved client information and approved proposal outline provided. Never invent facts, statistics, prices, dates, timelines, causes, or results. Never guarantee outcomes. Do not present a possible cause or area of investigation as confirmed information. If anything is missing, uncertain, or not approved, clearly label it "Needs Confirmation."
+
+Approved Client Information:
 ${approvedClientInfo}
 
-Approved proposal outline:
-${approvedOutline}
-
-OUTPUT REQUIREMENTS:
-Write professionally. Focus on the client's actual business problem. Explain
-Meridian's proposed approach clearly. Avoid unnecessary AI-sounding language.
-Never guarantee results. Clearly mark any information that still needs
-confirmation.
-${SHARED_RULES}`,
+Proposal Outline:
+${approvedOutline}`,
   },
 
+  // Edwin's actual final-tested prompt, from Meridian_Team_Unedited_Responses.md
+  // (2026-09-08), unchanged after his own review ("its good"). His prompt has
+  // no explicit paste slot for this specific engagement's details, so the
+  // approved proposal and client info are appended below it, clearly labeled,
+  // exactly as the workflow's chained inputs require.
   'follow-up': {
     name: 'Follow-Up Prompt',
     owner: 'Edwin',
     order: 5,
-    promptStatus: 'draft-placeholder',
+    promptStatus: 'team-tested',
     requires: ['approvedProposal', 'approvedClientInfo'],
-    promptTemplate: ({ approvedProposal, approvedClientInfo }) => `TASK:
-You are a sales communication specialist for Meridian Consulting Group.
-Create three follow-up messages for the salesperson to send after this
-proposal.
+    promptTemplate: ({ approvedProposal, approvedClientInfo }) => `Persona: you are a prompt professional assisting a salesperson from meridian, a b2b business.
 
-[DRAFT PLACEHOLDER — Edwin's assignment brief, not his tested prompt. Replace
-with his final TASK/CONTEXT/REFERENCES/OUTPUT text once the team has tested
-and peer-reviewed it.]
+Context: the number of clients are dropping due to delays in your responses after clients initial messages. All clients initiates conversion but its been over a week since and the salesperson has yet to answer. The salesperson does not want to lose anymore customers and potentially gain new customers.
 
-CONTEXT:
-- ${MERIDIAN_CONTEXT}
-- Previous steps: approved client information and the approved proposal
-  (Stage 4).
+Task: create three messages to increase efficiency of the transaction. Messages should be about:
 
-REFERENCES:
-Approved proposal:
-${approvedProposal}
+MESSAGE 1: Short follow-up after the initial conversation.
+MESSAGE 2: follow-up if the client hasn't responded.
+MESSAGE 3: Final professional follow-up
 
-Approved client information:
+Messages should:
+- Sound human
+- Be concise
+- Reference the client's problem
+- Provide a clear next step
+- Avoid being pushy
+- Avoid making promises
+- Never invent client information
+
+Client and proposal information for this engagement:
 ${approvedClientInfo}
 
-OUTPUT REQUIREMENTS:
-Message 1: short follow-up after the initial conversation/proposal.
-Message 2: follow-up if the client hasn't responded.
-Message 3: final professional follow-up.
-Each message should sound human, be concise, reference the client's problem,
-give a clear next step, avoid being pushy, and avoid making promises.
-${SHARED_RULES}`,
+Sent proposal:
+${approvedProposal}`,
   },
 };
 

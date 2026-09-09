@@ -264,20 +264,23 @@ browser. An earlier version of this page used Quality/Risk Review and Objection 
 of two of these — that was wrong (they aren't in the team's five-prompt table) and has been
 replaced.
 
-**Prompt status: every stage is currently running a labeled DRAFT PLACEHOLDER prompt**, built from
-each owner's actual assignment brief (`~/Downloads/Meridian_Team_Assignments`, Aug 30 2026) — not
-their tested prompt. As of 2026-09-08 all five assignment files still have an unfilled "[PASTE
-YOUR PROMPT HERE]" field; the in-class peer-review pass that produces the real prompts
-(`Apex-Prompt-Testing-Instructions-Team-Examples.pptx`) had not happened yet. The UI shows a "Draft
-placeholder prompt" badge on every stage as a reminder. Swap each stage's `promptTemplate` in
-`api/generate.js` for the team's final TASK/CONTEXT/REFERENCES/OUTPUT text when it's provided —
-nothing else needs to change. The "Load Apex Manufacturing Demo" button uses the exact canonical
-Apex wording from the team's shared testing instructions (slide 5 of the pptx above), the same
-input every owner/reviewer pair tested against.
+**Prompt status (2026-09-08): all five stages run each owner's actual final-tested prompt** —
+Ali, Angelica, Stephanie, Ashley, and Edwin's own tested TASK/prompt text, sourced from
+`Meridian_Team_Unedited_Responses.md` (Stephanie's prompt wasn't in that doc — André supplied it
+directly). Wording is preserved verbatim from their tests; only each stage's chained inputs were
+substituted in for the fixed Apex example text they tested against. The UI badge reads "Owner-tested
+prompt" — deliberately not "Approved prompt": this is each owner's own tested version, not a
+confirmed pass through the team's later cross-review step (`Apex-Prompt-Testing-Instructions-Team-
+Examples.pptx` describes a peer re-run/comparison step whose completion isn't confirmed). Swap in
+the fully peer-reviewed wording later if it differs — same one-line change per stage in
+`api/generate.js`. The "Load Apex Manufacturing Demo" button uses the exact canonical Apex wording
+from the team's shared testing instructions (slide 5 of the pptx above), the same input every
+owner/reviewer pair tested against.
 
-The "Use Saved Demo Output" fallback is wired up in the UI but disabled for all five stages —
-no approved saved Apex output exists yet for any of them. Do not enable it with placeholder text;
-wire in the team's real saved outputs when available.
+The "Use Saved Demo Output" fallback is wired up and enabled for all five stages, using each
+owner's genuine captured test output from `Meridian_Team_Unedited_Responses.md` against the Apex
+scenario — real captures, not invented text. Using it marks the output "Saved example — not
+generated live" and is visually distinct from a live AI run ("Live AI output").
 
 The page also includes a **post-proposal follow-up tracker** below the five-stage workflow: mark
 the current demo proposal sent, see a Not Sent / Follow-Up Due / Overdue / Followed Up status
@@ -333,11 +336,12 @@ before the first deploy that needs live AI calls.
 ### Presentation-demo checklist
 
 - [ ] `ANTHROPIC_API_KEY` set in Vercel for the environment you're presenting from
-- [ ] Get the team's five final, peer-reviewed prompts and swap them into `api/generate.js`
-- [ ] Confirm each stage's prompt is no longer a draft placeholder (badge should read "Approved
-      prompt", not "Draft placeholder prompt") — do not present with placeholder prompts
-- [ ] Confirm saved fallback output exists and is enabled for all five stages, in case of a live
-      API/network failure while presenting
+- [ ] If the team's cross-review pass (peer re-run + comparison) has completed, confirm none of
+      the five prompts changed from what's in `api/generate.js`; update any that did
+- [ ] Confirm every stage's badge reads "Owner-tested prompt" (or "Approved prompt" if you've
+      updated it after peer review) — do not present with a "Draft placeholder prompt" badge
+- [ ] Saved fallback output is enabled for all five stages (confirmed, using the team's real
+      captured test outputs) — verify it still reads "Saved example — not generated live" when used
 - [ ] Click "Load Apex Manufacturing Demo", run all five stages once end-to-end as a rehearsal,
       including entering a missing-information answer and running the follow-up tracker
 - [ ] Test Reset Demo between rehearsal and the live run

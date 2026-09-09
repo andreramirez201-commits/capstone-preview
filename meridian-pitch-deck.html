@@ -1,4 +1,4 @@
-<title>The Meridian Pitch</title>
+<title>Meridian Proposal Engine</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -204,6 +204,31 @@
   .dark .phase .pd{ color:var(--dark-ink-soft); }
   .dark .phase .pd b{ color:var(--dark-ink); }
 
+  /* ---- CTA buttons (deep links to demo / library / guide) ---- */
+  .cta-row{ display:flex; gap:12px; margin-top:22px; flex-wrap:wrap; }
+  .cta-btn{
+    font-family:"IBM Plex Mono", monospace; font-size:12.5px; text-decoration:none;
+    border-radius:999px; padding:10px 20px; display:inline-flex; align-items:center; gap:8px;
+    border:1px solid; white-space:nowrap;
+  }
+  .cta-btn:hover{ opacity:0.85; }
+  .paper .cta-btn.primary{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .dark .cta-btn.primary{ background:var(--dark-accent); border-color:var(--dark-accent); color:#0e1719; }
+  .paper .cta-btn.ghost{ background:transparent; border-color:var(--line); color:var(--ink); }
+  .dark .cta-btn.ghost{ background:transparent; border-color:var(--dark-line); color:var(--dark-ink); }
+
+  /* ---- Flagged-gap callout ---- */
+  .gap-note{
+    font-size:0.82rem; border-radius:8px; padding:10px 14px; margin-top:14px; display:block;
+  }
+  .paper .gap-note{ background:var(--accent-2-soft); color:var(--accent-2); }
+  .dark .gap-note{ background:var(--dark-accent-2-soft); color:var(--dark-accent-2); }
+
+  /* ---- Small print ---- */
+  .fine{ font-size:0.78rem; margin-top:10px; }
+  .paper .fine{ color:var(--ink-soft); }
+  .dark .fine{ color:var(--dark-ink-soft); }
+
   /* ---- Nav ---- */
   .navbar{ position:fixed; right:22px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:9px; z-index:20; }
   .dot{ width:8px; height:8px; border-radius:50%; background:#8a938f66; border:none; cursor:pointer; padding:0; }
@@ -232,12 +257,12 @@
   <section class="slide dark" data-title="Cover">
     <div class="cover-arc" aria-hidden="true"></div>
     <div class="eyebrow"><span class="cover-dot"></span>AI Connect Consulting &middot; Team 4</div>
-    <h1 class="cover-title">Meridian<br>Proposal Copilot</h1>
+    <h1 class="cover-title">Meridian<br>Proposal Engine</h1>
     <p class="cover-sub">An AI-assisted sales communication workflow for Meridian Consulting Group &mdash; drafted by AI, reviewed and sent by a person.</p>
     <div class="cover-pills">
       <span class="pill">AI Fundamentals Capstone</span>
       <span class="pill">Kickoff Aug 18, 2026</span>
-      <span class="pill">Final Presentation Sept 15&ndash;17, 2026</span>
+      <span class="pill">Final Presentation Sept 15, 2026</span>
     </div>
   </section>
 
@@ -257,23 +282,23 @@
   <!-- 3: Solution -->
   <section class="slide dark" data-title="Our AI Solution">
     <div class="eyebrow">02 &mdash; Our AI Solution</div>
-    <h1>A prompt library. Not custom software.</h1>
-    <p class="lede">Five prompts currently being tested, run in whatever AI tool Meridian already licenses. No new software, no IT lift. Every output is a draft &mdash; a rep reviews, edits, and is the one who sends.</p>
+    <h1>Five reusable prompts. One guided workflow.</h1>
+    <p class="lede">Three things come out of this project: a guided demo that proves the workflow end to end, a reusable five-prompt library, and a written operating guide. Reps run the five prompts in whatever AI tool Meridian already licenses &mdash; the demo is how we tested and are presenting the workflow, not the thing reps use day to day. Every output is a draft; a rep reviews, edits, and is the one who sends.</p>
     <div class="cols">
       <div class="col pro">
         <h3>Pros</h3>
         <ul>
-          <li>No new software or IT lift to adopt</li>
-          <li>Reps keep full control of tone and voice</li>
-          <li>Fast to pilot &mdash; two reps, thirty days</li>
+          <li>The workflow itself needs no new software or IT purchase &mdash; reps run it in the AI tool Meridian already licenses</li>
+          <li>Reps keep full control of tone, edits, and the send decision</li>
+          <li>Three ready-to-hand-off deliverables: a working demo, the prompt library, and an operating guide</li>
         </ul>
       </div>
       <div class="col con">
         <h3>Cons</h3>
         <ul>
-          <li>Still requires a trained rep to review every output</li>
-          <li>Output quality depends on good discovery notes</li>
-          <li>Doesn't replace human judgment on price or scope</li>
+          <li>The interactive demo itself needs hosting, an API key, and a small per-call cost &mdash; that's a presentation tool, not reps' daily workflow</li>
+          <li>Cross-team peer review of all five prompts isn't confirmed complete yet</li>
+          <li>Output quality still depends on good discovery notes and a rep who actually reads before sending</li>
         </ul>
       </div>
     </div>
@@ -284,7 +309,7 @@
   <section class="slide paper" data-title="How It Works">
     <div class="eyebrow">03 &mdash; How It Works</div>
     <h1>Five prompts, one pipeline.</h1>
-    <p class="lede">Each prompt hands its output to the next. A person can stop, correct, or restart at any point.</p>
+    <p class="lede">Each prompt hands its output to the next. A person reviews and approves before the next stage runs &mdash; every arrow below is a checkpoint, not an automatic handoff.</p>
     <div class="pipeline">
       <div class="node"><div class="node-dot">1</div><div class="node-label">Opportunity Summary</div><div class="node-cap">Ali &middot; turns messy notes into a clean summary</div></div>
       <div class="node"><div class="node-dot">2</div><div class="node-label">Missing Information</div><div class="node-cap">Angelica &middot; flags what's still unknown</div></div>
@@ -292,6 +317,7 @@
       <div class="node"><div class="node-dot">4</div><div class="node-label">Proposal Writer</div><div class="node-cap">Ashley &middot; drafts content from approved information</div></div>
       <div class="node"><div class="node-dot">5</div><div class="node-label">Follow-Up</div><div class="node-cap">Edwin &middot; three personalized check-in messages</div></div>
     </div>
+    <p class="fine">A person reads and approves each stage's output before it becomes the next stage's input. Nothing chains automatically.</p>
     <div class="footer-tag">AI Connect Consulting &middot; Team 4</div>
   </section>
 
@@ -319,11 +345,14 @@
           <b>Timeline</b>Apex wants to start "sometime this year" &mdash; no exact date set. Needs Confirmation.
         </div>
       </div>
-      <div class="pcard pending">
-        <span class="pendingtag">Pending &middot; not yet tested</span>
-        <h4>Proposed Approach</h4>
-        <div class="out">Ashley's Proposal Writer prompt has been assigned but not yet run against this scenario. The proposed approach will come from that test, not before.</div>
+      <div class="pcard">
+        <span class="tag">Proposed Approach &mdash; Ashley's Proposal Writer output</span>
+        <h4>Tested, not pending</h4>
+        <div class="out">Meridian will evaluate possible areas that may be contributing to the delays, including employee scheduling and production planning &mdash; investigated as potential contributors, not stated as confirmed causes. Budget and exact start date: Needs Confirmation.</div>
       </div>
+    </div>
+    <div class="cta-row">
+      <a class="cta-btn primary" href="meridian-proposal-writer.html">Open Demo &rarr;</a>
     </div>
     <div class="footer-tag">AI Connect Consulting &middot; Team 4</div>
   </section>
@@ -331,32 +360,44 @@
   <!-- 6: Testing method and findings -->
   <section class="slide dark" data-title="Testing Method & Findings">
     <div class="eyebrow">05 &mdash; Testing Method &amp; Findings</div>
-    <h1>One of five prompts tested so far.</h1>
+    <h1>Five of five prompts tested. Four documented.</h1>
     <div class="stats" style="margin-top:8px;">
-      <div class="stat"><div class="label">Prompts tested</div><div class="values"><span class="after">1 of 5 (20%)</span></div></div>
-      <div class="stat"><div class="label">Reviewers</div><div class="values"><span class="after">1 &mdash; Angelica</span></div></div>
+      <div class="stat"><div class="label">Owner-tested &amp; running in the demo</div><div class="values"><span class="after">5 of 5 (100%)</span></div></div>
+      <div class="stat"><div class="label">Self-review write-up documented</div><div class="values"><span class="after">4 of 5 (80%)</span></div></div>
     </div>
     <div class="phaselist">
-      <div class="phase"><div class="ph">Ali</div><div class="pd"><b>Opportunity Summary</b> &mdash; Pending final team results.</div></div>
-      <div class="phase"><div class="ph">Angelica</div><div class="pd"><b>Missing Information</b> &mdash; Tested against the Apex scenario in ChatGPT. Correctly separated known from unknown information and did not invent details; suggested questions rated useful for a salesperson. No revision made.</div></div>
-      <div class="phase"><div class="ph">Stephanie</div><div class="pd"><b>Proposal Outline</b> &mdash; Pending final team results.</div></div>
-      <div class="phase"><div class="ph">Ashley</div><div class="pd"><b>Proposal Writer</b> &mdash; Pending final team results.</div></div>
-      <div class="phase"><div class="ph">Edwin</div><div class="pd"><b>Follow-Up</b> &mdash; Pending final team results.</div></div>
+      <div class="phase"><div class="ph">Ali</div><div class="pd"><b>Opportunity Summary</b> &mdash; Tested against Apex. Found and fixed one issue: an unstated budget was mislabeled a "Known Constraint" instead of "Unknown Information." Revised.</div></div>
+      <div class="phase"><div class="ph">Angelica</div><div class="pd"><b>Missing Information</b> &mdash; Tested against Apex. Correctly separated known from unknown information and invented nothing; questions rated useful for a salesperson. No revision needed.</div></div>
+      <div class="phase"><div class="ph">Stephanie</div><div class="pd"><b>Proposal Outline</b> &mdash; Real output on file for Apex. No documented self-review write-up &mdash; gap to close before presenting this stage as fully reviewed.</div></div>
+      <div class="phase"><div class="ph">Ashley</div><div class="pd"><b>Proposal Writer</b> &mdash; Tested against Apex. Found and fixed one issue: an early draft didn't separate a possible cause from a confirmed fact. Revised.</div></div>
+      <div class="phase"><div class="ph">Edwin</div><div class="pd"><b>Follow-Up</b> &mdash; Tested against Apex. Messages read as human and personalized, each with a next step, nothing invented. No revision needed.</div></div>
     </div>
-    <p class="lede" style="margin-top:18px; margin-bottom:0;">Most common strength, most common failure, and strongest before/after example: pending final team results across all five prompts.</p>
+    <div class="cols" style="margin-top:20px;">
+      <div class="col pro">
+        <h3>Before &mdash; Ali's first draft</h3>
+        <ul><li>"8. Known Constraints &mdash; No budget was discussed."</li></ul>
+      </div>
+      <div class="col con">
+        <h3>After &mdash; revised prompt</h3>
+        <ul><li>"9. Unknown Information &mdash; Project budget" &mdash; the prompt now defines a Known Constraint as an actual stated limit, so an unaddressed budget routes here instead.</li></ul>
+      </div>
+    </div>
+    <p class="gap-note">Review model: each owner tested and reviewed their own prompt. The team's testing instructions also assign a cross-team peer reviewer per stage (Ashley&harr;Edwin, Ali&harr;Stephanie, Angelica&harr;Ali, Stephanie&harr;Angelica) &mdash; that independent re-run and comparison pass is not yet confirmed complete.</p>
     <div class="footer-tag">AI Connect Consulting &middot; Team 4</div>
   </section>
 
   <!-- 7: Human review & success measures -->
   <section class="slide paper" data-title="Human Review & Success Measures">
     <div class="eyebrow">06 &mdash; Human Review &amp; Success Measures</div>
-    <div class="statement" style="font-size:clamp(1.9rem,4.2vw,3.2rem);">AI drafts.<br><span class="soft" style="color:var(--ink-soft);">A person decides.</span><br>A person sends.</div>
-    <p class="lede" style="margin-top:20px;">No proposal or follow-up reaches a client unreviewed. Three numbers track whether the workflow is actually working.</p>
+    <div class="statement" style="font-size:clamp(1.7rem,3.6vw,2.8rem);">AI drafts.<br><span class="soft" style="color:var(--ink-soft);">A person decides.</span><br>A person sends.</div>
+    <p class="lede" style="margin-top:18px; margin-bottom:16px;">No proposal or follow-up reaches a client unreviewed. Three numbers track whether the workflow is actually working &mdash; all three are targets today, not measured results.</p>
     <div class="stats">
       <div class="stat"><div class="label">Proposal drafting time</div><div class="values"><span class="before">14 hrs</span><span class="arrow">&rarr;</span><span class="after">7 hrs target</span></div></div>
-      <div class="stat"><div class="label">Time to first follow-up</div><div class="values"><span class="before">5+ days</span><span class="arrow">&rarr;</span><span class="after">&lt;24 hrs team target</span></div></div>
+      <div class="stat"><div class="label">Time to first follow-up</div><div class="values"><span class="before">5+ days</span><span class="arrow">&rarr;</span><span class="after">&lt;24 hrs proposed team target</span></div></div>
       <div class="stat pending"><div class="label">Proposal win rate</div><div class="values"><span class="before">Declining</span><span class="arrow">&rarr;</span><span class="after">Tracked monthly &mdash; no result claimed yet</span></div></div>
     </div>
+    <p class="fine">Drafting time: clock starts at discovery notes, ends when the human-reviewed proposal is sent. Follow-up time: clock starts when a <i>sent</i> proposal goes quiet, ends when Message 1 is actually sent &mdash; not generated. Generating a message isn't sending it: a rep still reviews the draft, sets their own reminder, sends it, and records when they did.</p>
+    <p class="gap-note">Scope note: the brief's "5+ days" could mean first response to a new lead, or follow-up after a proposal is sent. This workflow is scoped to post-proposal follow-up &mdash; confirmed with the team before presenting, not assumed.</p>
     <div class="footer-tag">AI Connect Consulting &middot; Team 4</div>
   </section>
 
@@ -365,31 +406,62 @@
     <div class="eyebrow">07 &mdash; Responsible AI</div>
     <h1>Four guardrails, built into the workflow.</h1>
     <div class="raigrid">
-      <div class="raiitem"><span class="k">Accuracy</span><p>Every prompt is told to flag "Needs Confirmation" instead of inventing a fact, name, or number.</p></div>
-      <div class="raiitem"><span class="k">No overpromising</span><p>Human review exists to catch an unqualified result claim before a client sees it.</p></div>
+      <div class="raiitem"><span class="k">Accuracy</span><p>Every one of the five prompts is instructed to label an unknown "Needs Confirmation" instead of inventing it &mdash; verified in testing for four of five stages.</p></div>
+      <div class="raiitem"><span class="k">No overpromising</span><p>Human review is the safeguard here, not a separate AI check &mdash; a person reads every stage's output before approving it, specifically for invented prices, dates, or guaranteed outcomes.</p></div>
       <div class="raiitem"><span class="k">Confidentiality</span><p>Only fictional or anonymized inputs go into the AI tool &mdash; never real client data.</p></div>
-      <div class="raiitem"><span class="k">Human sign-off</span><p>A named rep reviews and sends every output. Nothing sends on its own.</p></div>
+      <div class="raiitem"><span class="k">Human sign-off</span><p>A named rep reviews and sends every output. The follow-up tracker only records a simulated timestamp locally &mdash; nothing here sends on its own.</p></div>
     </div>
     <div class="footer-tag">AI Connect Consulting &middot; Team 4</div>
   </section>
 
-  <!-- 9: Recommendation -->
+  <!-- 9: What Meridian Receives -->
+  <section class="slide paper" data-title="What Meridian Receives">
+    <div class="eyebrow">08 &mdash; What Meridian Receives</div>
+    <h1>Three things Meridian keeps after this project ends.</h1>
+    <p class="lede">Built so someone who wasn't on this team can pick the workflow up and keep it correct &mdash; the guide preserves the reasoning behind each prompt and each decision, not just the prompt text.</p>
+    <div class="pcards three">
+      <div class="pcard">
+        <span class="tag">Guided Demo</span>
+        <h4>meridian-proposal-writer.html</h4>
+        <div class="out">Walks all five stages live &mdash; calls a real AI model through a server-side proxy, or shows each owner's real saved test output. Used to test and present the workflow, not for day-to-day rep use.</div>
+      </div>
+      <div class="pcard">
+        <span class="tag">Prompt Library</span>
+        <h4>Five prompts, one source</h4>
+        <div class="out">Purpose, required input, full text, and expected output for each stage &mdash; browsable in-app via the demo's Prompt Library button, and downloadable as one Markdown file.</div>
+      </div>
+      <div class="pcard">
+        <span class="tag">Workflow Operating Guide</span>
+        <h4>MERIDIAN_WORKFLOW_GUIDE.md</h4>
+        <div class="out">Step-by-step instructions, what passes between stages, where a person reviews, and known gaps &mdash; a written guide, not an AI memory. Nothing reads this file automatically.</div>
+      </div>
+    </div>
+    <div class="cta-row">
+      <a class="cta-btn primary" href="meridian-proposal-writer.html">Open Demo</a>
+      <a class="cta-btn ghost" href="meridian-proposal-writer.html?library=1">Open Prompt Library</a>
+      <a class="cta-btn ghost" href="MERIDIAN_WORKFLOW_GUIDE.md" download>Download Guide</a>
+    </div>
+    <div class="footer-tag">AI Connect Consulting &middot; Team 4</div>
+  </section>
+
+  <!-- 10: Next Steps -->
   <section class="slide paper" data-title="Next Steps">
-    <div class="eyebrow">08 &mdash; What's Next</div>
+    <div class="eyebrow">09 &mdash; What's Next</div>
     <h1>Pilot first. Measure before we scale.</h1>
     <div class="phaselist">
-      <div class="phase"><div class="ph">Days 1&ndash;30</div><div class="pd"><b>Pilot</b> &mdash; two reps, real (fictional-safe) leads, no new software purchased.</div></div>
+      <div class="phase"><div class="ph">Days 1&ndash;30</div><div class="pd"><b>Pilot</b> &mdash; two reps, real leads, using only fictional or anonymized client details in the AI tool. No new software purchased.</div></div>
       <div class="phase"><div class="ph">Days 31&ndash;60</div><div class="pd"><b>Measure &amp; improve</b> &mdash; revise any prompt that produced an error or overpromise.</div></div>
       <div class="phase"><div class="ph">Days 61&ndash;90</div><div class="pd"><b>Scale decision</b> &mdash; full rollout if drafting time, follow-up time, and accuracy targets hold.</div></div>
     </div>
-    <p class="lede" style="margin-top:22px;"><b style="color:var(--dark-ink)">Final recommendation:</b> adopt the five-prompt workflow, with human review of every draft treated as a mandatory gate &mdash; not an optional step.</p>
+    <p class="gap-note">Unresolved before rollout: the cross-team peer-review pass on all five prompts isn't confirmed complete; Stephanie's self-review write-up isn't documented; the follow-up-timing scope (first response vs. post-proposal) needs confirming; and the demo's live AI calls need <span class="mono">ANTHROPIC_API_KEY</span> set in whatever environment is presenting (the saved-example fallback works without it).</p>
+    <p class="lede" style="margin-top:16px;"><b style="color:var(--ink)">Final recommendation:</b> adopt the five-prompt workflow, with human review of every draft treated as a mandatory gate &mdash; not an optional step &mdash; and close the peer-review gap above before firm-wide rollout.</p>
     <div class="footer-tag">AI Connect Consulting &middot; Team 4</div>
   </section>
 
 </div>
 
 <div class="navbar" id="navbar"></div>
-<div class="counter" id="counter">1 / 9</div>
+<div class="counter" id="counter">1 / 10</div>
 <div class="navbtns">
   <button class="navbtn" id="prevBtn" aria-label="Previous slide">&uarr;</button>
   <button class="navbtn" id="nextBtn" aria-label="Next slide">&darr;</button>
