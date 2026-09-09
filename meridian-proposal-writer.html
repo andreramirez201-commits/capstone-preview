@@ -1,0 +1,821 @@
+<title>Meridian AI Proposal Writer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#f2efe7;
+    --paper-raised:#fbf9f3;
+    --ink:#1c2321;
+    --ink-soft:#4b524d;
+    --line:#cdc6b6;
+    --line-soft:#ded8c9;
+    --accent:#1d5c63;
+    --accent-soft:#e4ede9;
+    --accent-2:#b8622b;
+    --accent-2-soft:#f3e6d8;
+    --good:#2f6f4e;
+    --good-soft:#e4efe7;
+    --warn:#8a5a00;
+    --warn-soft:#f7e9c9;
+    --bad:#a12f2f;
+    --bad-soft:#f6e2e0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ font-family:"Fraunces", Georgia, serif; font-weight:600; margin:0; }
+  .mono{ font-family:"IBM Plex Mono", monospace; }
+  button{ font-family:inherit; cursor:pointer; }
+  button:disabled{ cursor:not-allowed; opacity:0.5; }
+  textarea,input[type=text]{ font-family:inherit; }
+
+  /* ---------- shell ---------- */
+  .app{ max-width:1180px; margin:0 auto; padding:24px 28px 60px; }
+
+  .notice{
+    background:var(--accent-soft);
+    color:var(--accent);
+    border:1px solid var(--line-soft);
+    border-radius:8px;
+    padding:10px 14px;
+    font-size:13px;
+    margin-bottom:18px;
+  }
+  .notice b{ color:var(--ink); }
+  .notice.scope{ background:var(--warn-soft); color:var(--warn); margin-top:0; margin-bottom:14px; }
+
+  header.top{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap:20px; margin-bottom:22px; flex-wrap:wrap;
+  }
+  header.top h1{ font-size:clamp(1.7rem,3vw,2.3rem); margin-bottom:6px; }
+  header.top p{ color:var(--ink-soft); max-width:64ch; margin:0; font-size:14.5px; }
+  .mode-toggle{
+    display:flex; gap:8px; align-items:center; flex-shrink:0;
+  }
+  .btn{
+    border:1px solid var(--line); background:var(--paper-raised); color:var(--ink);
+    padding:9px 14px; border-radius:7px; font-size:13.5px; font-weight:500;
+  }
+  .btn:hover:not(:disabled){ border-color:var(--accent); }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn.primary:hover:not(:disabled){ background:#164a50; }
+  .btn.ghost{ background:transparent; }
+  .btn.danger{ color:var(--bad); border-color:var(--bad-soft); }
+  .btn.small{ padding:6px 10px; font-size:12px; }
+
+  /* ---------- stage progress ---------- */
+  .stages{
+    display:flex; gap:0; margin-bottom:24px; border:1px solid var(--line);
+    border-radius:10px; overflow:hidden; background:var(--paper-raised);
+  }
+  .stage-chip{
+    flex:1; padding:12px 10px; text-align:center; font-size:12.5px;
+    border-right:1px solid var(--line); color:var(--ink-soft); position:relative;
+    background:none; border-top:none; border-bottom:none; border-left:none;
+  }
+  .stage-chip[data-clickable="1"]{ cursor:pointer; }
+  .stage-chip[data-clickable="1"]:hover{ background:var(--accent-soft); }
+  .stage-chip:last-child{ border-right:none; }
+  .stage-chip .num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:20px; height:20px; border-radius:50%; background:var(--line);
+    color:#fff; font-size:11px; margin-bottom:4px;
+  }
+  .stage-chip .label{ display:block; font-weight:500; }
+  .stage-chip .owner{ display:block; font-size:11px; color:var(--ink-soft); margin-top:2px; }
+  .stage-chip.done{ color:var(--good); }
+  .stage-chip.done .num{ background:var(--good); color:#fff; }
+  .stage-chip.active{ background:var(--accent-soft); color:var(--accent); }
+  .stage-chip.active .num{ background:var(--accent); color:#fff; }
+  .stage-chip.stale{ color:var(--warn); }
+  .stage-chip.stale .num{ background:var(--warn); color:#fff; }
+
+  /* ---------- workspace ---------- */
+  .workspace{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width:860px){ .workspace{ grid-template-columns:1fr; } }
+
+  .panel{
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:10px;
+    padding:18px 18px 20px; display:flex; flex-direction:column; gap:12px;
+  }
+  .panel h2{ font-size:16px; }
+  .panel .sub{ font-size:12.5px; color:var(--ink-soft); margin:-8px 0 0; }
+
+  textarea.field{
+    width:100%; min-height:260px; resize:vertical; border:1px solid var(--line);
+    border-radius:7px; padding:12px; font-size:13.5px; background:#fff; color:var(--ink);
+  }
+  textarea.field:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+  textarea.field[readonly]{ background:var(--paper); color:var(--ink-soft); }
+  textarea.field.small{ min-height:90px; }
+
+  .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+  .prior-context{
+    background:var(--paper); border:1px dashed var(--line); border-radius:7px;
+    padding:10px 12px; font-size:12.5px; color:var(--ink-soft); max-height:140px; overflow:auto;
+    white-space:pre-wrap; margin-bottom:8px;
+  }
+  .prior-context .dep-label{ font-weight:600; color:var(--ink); display:block; margin-bottom:3px; }
+
+  .extra-field label{ font-size:12.5px; font-weight:600; display:block; margin-bottom:5px; }
+
+  .prompt-status{
+    font-size:11.5px; padding:4px 9px; border-radius:20px; display:inline-flex;
+    align-items:center; gap:5px; width:fit-content;
+  }
+  .prompt-status.draft{ background:var(--warn-soft); color:var(--warn); }
+  .prompt-status.approved{ background:var(--good-soft); color:var(--good); }
+
+  .loading{
+    display:none; align-items:center; gap:8px; font-size:13px; color:var(--accent);
+  }
+  .loading.on{ display:flex; }
+  .spinner{
+    width:14px; height:14px; border-radius:50%; border:2px solid var(--accent-soft);
+    border-top-color:var(--accent); animation:spin 0.7s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .error-box{
+    display:none; background:var(--bad-soft); color:var(--bad); border:1px solid #e0b8b3;
+    border-radius:7px; padding:10px 12px; font-size:13px;
+  }
+  .error-box.on{ display:block; }
+
+  .human-review{
+    background:var(--accent-2-soft); border:1px solid #e3c19f; color:#7a4419;
+    border-radius:7px; padding:9px 12px; font-size:12.5px; display:flex; gap:8px; align-items:flex-start;
+  }
+
+  .output-preview{
+    border:1px solid var(--line); border-radius:7px; background:#fff; padding:12px;
+    font-size:13.5px; min-height:260px; max-height:420px; overflow:auto; white-space:pre-wrap;
+  }
+  .output-preview .flag-line{
+    background:var(--warn-soft); color:var(--warn); border-radius:3px; padding:0 2px;
+    box-shadow:0 0 0 2px var(--warn-soft);
+  }
+  .output-preview:empty::before{ content:"Output will appear here after you run this stage."; color:var(--ink-soft); }
+
+  .saved-fallback{
+    border:1px solid var(--line); border-radius:7px; padding:10px 12px; font-size:12.5px;
+    background:var(--paper); color:var(--ink-soft); display:flex; justify-content:space-between;
+    align-items:center; gap:10px; flex-wrap:wrap;
+  }
+
+  .stale-notice{
+    display:none; background:var(--warn-soft); color:var(--warn); border-radius:7px;
+    padding:9px 12px; font-size:12.5px;
+  }
+  .stale-notice.on{ display:block; }
+
+  /* ---------- follow-up tracker ---------- */
+  .tracker{
+    margin-top:28px; background:var(--paper-raised); border:1px solid var(--line);
+    border-radius:10px; padding:18px 18px 20px; display:flex; flex-direction:column; gap:12px;
+  }
+  .tracker h2{ font-size:16px; }
+  .tracker .sub{ font-size:12.5px; color:var(--ink-soft); margin:-6px 0 0; }
+  .demo-data-label{
+    font-size:11.5px; color:var(--ink-soft); font-style:italic;
+  }
+  .tracker-locked{
+    font-size:13px; color:var(--ink-soft); border:1px dashed var(--line); border-radius:7px;
+    padding:14px; text-align:center;
+  }
+  .status-badge{
+    font-size:12.5px; padding:5px 11px; border-radius:20px; font-weight:600; width:fit-content;
+  }
+  .status-badge.not-sent{ background:var(--line-soft); color:var(--ink-soft); }
+  .status-badge.due{ background:var(--accent-soft); color:var(--accent); }
+  .status-badge.overdue{ background:var(--bad-soft); color:var(--bad); }
+  .status-badge.followed-up{ background:var(--good-soft); color:var(--good); }
+  .simulated-tag{
+    font-size:11px; background:var(--warn-soft); color:var(--warn); border-radius:20px;
+    padding:3px 9px; width:fit-content; font-weight:600;
+  }
+  .tracker-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px;
+  }
+  .tracker-stat{
+    background:var(--paper); border:1px solid var(--line); border-radius:7px; padding:9px 11px;
+  }
+  .tracker-stat .k{ font-size:11px; color:var(--ink-soft); display:block; margin-bottom:2px; }
+  .tracker-stat .v{ font-size:13.5px; font-weight:600; }
+  .tracker-recap{
+    background:var(--paper); border:1px dashed var(--line); border-radius:7px; padding:10px 12px;
+    font-size:12.5px; color:var(--ink-soft); max-height:140px; overflow:auto; white-space:pre-wrap;
+  }
+  .tracker-owner-input{
+    border:1px solid var(--line); border-radius:7px; padding:8px 10px; font-size:13px; width:220px;
+  }
+
+  footer.bottom{
+    margin-top:22px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+  }
+
+  /* ---------- presentation mode ---------- */
+  body.presentation .app{ max-width:1440px; }
+  body.presentation header.top p,
+  body.presentation .dev-info,
+  body.presentation .prior-context small{ display:none; }
+  body.presentation h1{ font-size:clamp(2.1rem,4vw,3rem); }
+  body.presentation .panel h2{ font-size:19px; }
+  body.presentation .btn{ padding:13px 20px; font-size:15px; }
+  body.presentation textarea.field, body.presentation .output-preview{ font-size:16px; min-height:320px; }
+  body.presentation .stage-chip{ font-size:14px; padding:16px 10px; }
+  body.presentation .stage-chip .num{ width:26px; height:26px; font-size:13px; }
+</style>
+
+<div class="app">
+  <div class="notice">
+    Prototype demonstration only. Do not enter confidential client information. All AI-generated
+    content requires human review and approval.
+  </div>
+
+  <header class="top">
+    <div>
+      <h1>Meridian AI Proposal Writer</h1>
+      <p>
+        A five-stage AI workflow prototype for Meridian Consulting Group's sales team: Opportunity
+        Summary &rarr; Missing Information Detector &rarr; Proposal Outline Builder &rarr; Proposal
+        Writer &rarr; Follow-Up Prompt. A person reviews and approves every stage before it feeds
+        the next.
+      </p>
+    </div>
+    <div class="mode-toggle">
+      <button class="btn" id="presentBtn" type="button">Presentation Mode</button>
+      <button class="btn danger" id="resetBtn" type="button">Reset Demo</button>
+    </div>
+  </header>
+
+  <div class="stages" id="stageBar"></div>
+
+  <div class="stale-notice" id="staleNotice">
+    An earlier stage changed after this one was approved. This stage's approved output was
+    cleared &mdash; re-run and re-approve it before continuing downstream.
+  </div>
+
+  <div class="workspace">
+    <section class="panel">
+      <h2 id="inputTitle">Client Opportunity Summary &mdash; Input</h2>
+      <p class="sub" id="inputSub">Paste discovery notes, emails, or CRM notes below, or load the demo scenario.</p>
+
+      <div id="priorContextWrap" style="display:none;"></div>
+
+      <textarea class="field" id="opportunityNotes" placeholder="Paste discovery notes, emails, or CRM notes here..."></textarea>
+
+      <div class="row">
+        <button class="btn" id="loadDemoBtn" type="button">Load Apex Manufacturing Demo</button>
+        <button class="btn primary" id="runBtn" type="button">Run This Stage</button>
+        <span class="prompt-status draft" id="promptStatusChip">Draft placeholder prompt</span>
+      </div>
+      <div class="loading" id="loadingIndicator"><span class="spinner"></span> Contacting AI provider&hellip;</div>
+      <div class="error-box" id="errorBox"></div>
+
+      <div class="mono" style="font-size:11px; color:var(--ink-soft);" id="devInfo"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Output</h2>
+      <div class="human-review">
+        <span>&#9888;</span>
+        <span>AI drafts. A person reviews, edits, and decides whether to send. Nothing here goes to a client unreviewed.</span>
+      </div>
+
+      <div class="output-preview" id="outputPreview"></div>
+      <textarea class="field" id="outputEdit" placeholder="Run this stage, or edit the output here directly." style="min-height:140px;"></textarea>
+
+      <div class="extra-field" id="missingInfoAnswersWrap" style="display:none;">
+        <label for="missingInfoAnswers">Confirmed answers (optional)</label>
+        <textarea class="field small" id="missingInfoAnswers" placeholder="Type answers to any items above that you can now confirm. Anything left blank stays &quot;Needs Confirmation&quot; &mdash; never fill this in with a guess."></textarea>
+      </div>
+
+      <div class="row">
+        <button class="btn primary" id="approveBtn" type="button" disabled>Approve and Continue</button>
+        <button class="btn" id="copyBtn" type="button" disabled>Copy Output</button>
+      </div>
+
+      <div class="saved-fallback">
+        <span id="savedFallbackLabel">Saved Apex output: not yet available for this stage.</span>
+        <button class="btn ghost" id="savedFallbackBtn" type="button" disabled>Use Saved Demo Output</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="tracker">
+    <h2>Post-Proposal Follow-Up Tracker</h2>
+    <p class="sub">
+      Scope note: the course brief describes leads waiting 5+ days for follow-up in general and
+      does not say whether that means the first response to an inquiry or follow-up after a
+      proposal is sent. Edwin's own assignment frames Message 1 as following "the initial
+      conversation," which could be either. This tracker is scoped to <b>post-proposal
+      follow-up only</b> &mdash; confirm the intended scope with the team before presenting.
+    </p>
+
+    <div class="tracker-locked" id="trackerLocked">
+      Complete and approve the Proposal Writer stage above to enable this tracker.
+    </div>
+
+    <div id="trackerBody" style="display:none;">
+      <div class="row" style="justify-content:space-between;">
+        <span class="status-badge" id="trackerStatusBadge">Not Sent</span>
+        <span class="simulated-tag" id="trackerSimulatedTag" style="display:none;">SIMULATED EXAMPLE</span>
+      </div>
+
+      <div class="tracker-grid">
+        <div class="tracker-stat"><span class="k">Sent</span><span class="v" id="trackerSentAt">&mdash;</span></div>
+        <div class="tracker-stat"><span class="k">Follow-up due</span><span class="v" id="trackerDueAt">&mdash;</span></div>
+        <div class="tracker-stat"><span class="k">Followed up</span><span class="v" id="trackerFollowedAt">&mdash;</span></div>
+        <div class="tracker-stat"><span class="k">Elapsed / target</span><span class="v" id="trackerElapsed">&mdash;</span></div>
+      </div>
+
+      <div class="row">
+        <label for="trackerOwner" style="font-size:12.5px; font-weight:600;">Salesperson / owner</label>
+        <input type="text" id="trackerOwner" class="tracker-owner-input" placeholder="e.g. Edwin">
+      </div>
+
+      <div class="row">
+        <button class="btn primary" id="markSentBtn" type="button">Mark Proposal Sent &mdash; Demo</button>
+        <button class="btn" id="markFollowedUpBtn" type="button" disabled>Mark First Follow-Up Sent &mdash; Demo</button>
+        <button class="btn ghost small" id="loadOverdueBtn" type="button">Load Overdue Example</button>
+      </div>
+
+      <div>
+        <span class="k" style="font-size:11.5px; color:var(--ink-soft); display:block; margin-bottom:4px;">Approved proposal (Stage 4, Ashley)</span>
+        <div class="tracker-recap" id="trackerProposalRecap">(none yet)</div>
+      </div>
+      <div>
+        <span class="k" style="font-size:11.5px; color:var(--ink-soft); display:block; margin-bottom:4px;">Follow-up messages (Stage 5, Edwin) &mdash; prepared from the approved proposal above</span>
+        <div class="tracker-recap" id="trackerFollowUpRecap">(not generated yet &mdash; run and approve Stage 5 above)</div>
+      </div>
+
+      <span class="demo-data-label">Demo data &mdash; this browser only. The 24-hour target is a proposed pilot goal, not a measured result. These buttons record simulated actions; nothing is sent by email, SMS, or any other channel, and status only updates when this page is open or refreshed.</span>
+    </div>
+  </section>
+
+  <footer class="bottom">
+    <span class="mono" style="font-size:11.5px; color:var(--ink-soft);">Meridian AI Proposal Writer &mdash; capstone prototype, not a production system.</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Five stages, in order, matching the authoritative team table.
+  // deps: which earlier stages' approved output this stage needs.
+  var STAGES = [
+    { id:'opportunity-summary', name:'Client Opportunity Summary', owner:'Ali', deps:[] },
+    { id:'missing-information', name:'Missing Information Detector', owner:'Angelica', deps:['opportunity-summary'] },
+    { id:'proposal-outline', name:'Proposal Outline Builder', owner:'Stephanie', deps:['opportunity-summary','missing-information'] },
+    { id:'proposal-writer', name:'Proposal Writer', owner:'Ashley', deps:['opportunity-summary','missing-information','proposal-outline'] },
+    { id:'follow-up', name:'Follow-Up Prompt', owner:'Edwin', deps:['opportunity-summary','missing-information','proposal-writer'] }
+  ];
+  var DEP_LABELS = {
+    'opportunity-summary': 'Approved Opportunity Summary',
+    'missing-information': 'Missing-Information Review & Confirmed Answers',
+    'proposal-outline': 'Approved Proposal Outline',
+    'proposal-writer': 'Approved Proposal'
+  };
+
+  // Canonical Apex Manufacturing test case — exact wording from the team's
+  // shared testing instructions (Apex-Prompt-Testing-Instructions-Team-
+  // Examples.pptx, slide 5), the same input every owner/reviewer pair used.
+  var APEX_DEMO_NOTES =
+    "Apex Manufacturing has production delays. Meridian will investigate " +
+    "whether employee scheduling and production planning contribute to " +
+    "those delays. Apex wants recommendations for operational improvement. " +
+    "Budget, timeline, start date, decision-maker, data access and final " +
+    "scope need confirmation.";
+
+  var state = {
+    stageIndex: 0,
+    maxReached: 0,
+    approved: {}, // stageId -> approved output text
+    stale: {},    // stageId -> true if invalidated by an upstream change, cleared on next run
+    presentation: false
+  };
+
+  var els = {
+    stageBar: document.getElementById('stageBar'),
+    staleNotice: document.getElementById('staleNotice'),
+    inputTitle: document.getElementById('inputTitle'),
+    inputSub: document.getElementById('inputSub'),
+    priorContextWrap: document.getElementById('priorContextWrap'),
+    opportunityNotes: document.getElementById('opportunityNotes'),
+    loadDemoBtn: document.getElementById('loadDemoBtn'),
+    runBtn: document.getElementById('runBtn'),
+    promptStatusChip: document.getElementById('promptStatusChip'),
+    loadingIndicator: document.getElementById('loadingIndicator'),
+    errorBox: document.getElementById('errorBox'),
+    outputPreview: document.getElementById('outputPreview'),
+    outputEdit: document.getElementById('outputEdit'),
+    missingInfoAnswersWrap: document.getElementById('missingInfoAnswersWrap'),
+    missingInfoAnswers: document.getElementById('missingInfoAnswers'),
+    approveBtn: document.getElementById('approveBtn'),
+    copyBtn: document.getElementById('copyBtn'),
+    savedFallbackLabel: document.getElementById('savedFallbackLabel'),
+    savedFallbackBtn: document.getElementById('savedFallbackBtn'),
+    presentBtn: document.getElementById('presentBtn'),
+    resetBtn: document.getElementById('resetBtn'),
+    devInfo: document.getElementById('devInfo')
+  };
+
+  function currentStage(){ return STAGES[state.stageIndex]; }
+  function stageById(id){ for (var i=0;i<STAGES.length;i++){ if (STAGES[i].id===id) return STAGES[i]; } return null; }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c];
+    });
+  }
+
+  function renderPreview(text){
+    if (!text){ els.outputPreview.innerHTML = ''; return; }
+    var lines = text.split('\n').map(function(line){
+      var escaped = escapeHtml(line);
+      if (/needs confirmation/i.test(line)){
+        return '<span class="flag-line">' + escaped + '</span>';
+      }
+      return escaped;
+    });
+    els.outputPreview.innerHTML = lines.join('\n');
+  }
+
+  function combinedClientInfo(){
+    var summary = state.approved['opportunity-summary'] || '';
+    var missing = state.approved['missing-information'] || '';
+    return summary + (missing ? '\n\n--- Missing-Information Review & Confirmed Answers ---\n' + missing : '');
+  }
+
+  function renderStageBar(){
+    els.stageBar.innerHTML = '';
+    STAGES.forEach(function(stage, i){
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      var isDone = !!state.approved[stage.id];
+      var isStale = !!state.stale[stage.id];
+      var cls = 'stage-chip' + (i === state.stageIndex ? ' active' : '') + (isDone ? ' done' : '') + (isStale ? ' stale' : '');
+      var clickable = i <= state.maxReached;
+      if (clickable) chip.setAttribute('data-clickable', '1');
+      chip.className = cls;
+      chip.disabled = !clickable;
+      chip.innerHTML = '<span class="num">' + (isDone ? '✓' : (i+1)) + '</span>' +
+        '<span class="label">' + stage.name + '</span>' +
+        '<span class="owner">Owner: ' + stage.owner + '</span>';
+      chip.addEventListener('click', function(){
+        if (!clickable) return;
+        state.stageIndex = i;
+        renderStagePanel();
+      });
+      els.stageBar.appendChild(chip);
+    });
+  }
+
+  function renderStagePanel(){
+    var stage = currentStage();
+    els.inputTitle.textContent = stage.name + ' (' + stage.owner + ') — Input';
+    els.promptStatusChip.textContent = 'Draft placeholder prompt';
+    els.promptStatusChip.className = 'prompt-status draft';
+
+    // Stage 1: free-text notes. Stage 2+: read-only recap of every stage this
+    // one depends on.
+    if (stage.deps.length === 0){
+      els.inputSub.textContent = 'Paste discovery notes, emails, or CRM notes below, or load the demo scenario.';
+      els.priorContextWrap.style.display = 'none';
+      els.priorContextWrap.innerHTML = '';
+      els.opportunityNotes.style.display = 'block';
+      els.loadDemoBtn.style.display = 'inline-flex';
+    } else {
+      els.inputSub.textContent = 'Review the approved input below, then run this stage.';
+      els.priorContextWrap.style.display = 'block';
+      els.priorContextWrap.innerHTML = '';
+      stage.deps.forEach(function(depId){
+        var block = document.createElement('div');
+        block.className = 'prior-context';
+        var text = state.approved[depId];
+        block.innerHTML = '<span class="dep-label">' + escapeHtml(DEP_LABELS[depId] || depId) + '</span>' +
+          escapeHtml(text || '(not approved yet)');
+        els.priorContextWrap.appendChild(block);
+      });
+      els.opportunityNotes.style.display = 'none';
+      els.loadDemoBtn.style.display = 'none';
+    }
+
+    els.missingInfoAnswersWrap.style.display = (stage.id === 'missing-information') ? 'block' : 'none';
+    els.missingInfoAnswers.value = '';
+
+    els.staleNotice.classList.toggle('on', !!state.stale[stage.id]);
+
+    // Reset the output side for the new stage.
+    els.outputEdit.value = state.approved[stage.id] || '';
+    renderPreview(els.outputEdit.value);
+    els.approveBtn.disabled = !els.outputEdit.value.trim();
+    els.copyBtn.disabled = !els.outputEdit.value.trim();
+    hideError();
+
+    els.savedFallbackLabel.textContent = 'Saved Apex output: not yet available for this stage.';
+    els.savedFallbackBtn.disabled = true;
+
+    renderStageBar();
+  }
+
+  function showError(msg){
+    els.errorBox.textContent = msg;
+    els.errorBox.classList.add('on');
+  }
+  function hideError(){
+    els.errorBox.textContent = '';
+    els.errorBox.classList.remove('on');
+  }
+
+  function setLoading(on){
+    els.loadingIndicator.classList.toggle('on', on);
+    els.runBtn.disabled = on;
+    els.loadDemoBtn.disabled = on;
+  }
+
+  function buildContext(stage){
+    if (stage.id === 'opportunity-summary'){
+      return { opportunityNotes: els.opportunityNotes.value.trim() };
+    }
+    if (stage.id === 'missing-information'){
+      return { approvedSummary: state.approved['opportunity-summary'] || '' };
+    }
+    if (stage.id === 'proposal-outline'){
+      return {
+        approvedSummary: state.approved['opportunity-summary'] || '',
+        approvedMissingInfo: state.approved['missing-information'] || ''
+      };
+    }
+    if (stage.id === 'proposal-writer'){
+      return {
+        approvedClientInfo: combinedClientInfo(),
+        approvedOutline: state.approved['proposal-outline'] || ''
+      };
+    }
+    if (stage.id === 'follow-up'){
+      return {
+        approvedProposal: state.approved['proposal-writer'] || '',
+        approvedClientInfo: combinedClientInfo()
+      };
+    }
+    return {};
+  }
+
+  function runStage(){
+    var stage = currentStage();
+    var context = buildContext(stage);
+
+    delete state.stale[stage.id];
+    els.staleNotice.classList.remove('on');
+    hideError();
+    setLoading(true);
+    els.outputEdit.value = '';
+    renderPreview('');
+
+    fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ stage: stage.id, context: context })
+    }).then(function(res){
+      return res.json().then(function(data){ return { ok: res.ok, data: data }; });
+    }).then(function(result){
+      setLoading(false);
+      if (!result.ok){
+        showError(result.data && result.data.error ? result.data.error : 'The request failed.');
+        return;
+      }
+      var output = result.data.output || '';
+      els.outputEdit.value = output;
+      renderPreview(output);
+      els.approveBtn.disabled = !output;
+      els.copyBtn.disabled = !output;
+    }).catch(function(){
+      setLoading(false);
+      showError('Could not reach the server. Check your connection and try again, or use the saved fallback output if presenting live.');
+    });
+  }
+
+  els.outputEdit.addEventListener('input', function(){
+    renderPreview(els.outputEdit.value);
+    els.approveBtn.disabled = !els.outputEdit.value.trim();
+    els.copyBtn.disabled = !els.outputEdit.value.trim();
+  });
+
+  els.runBtn.addEventListener('click', runStage);
+
+  els.loadDemoBtn.addEventListener('click', function(){
+    els.opportunityNotes.value = APEX_DEMO_NOTES;
+  });
+
+  function invalidateDownstream(fromIndex){
+    for (var j = fromIndex + 1; j < STAGES.length; j++){
+      if (state.approved[STAGES[j].id]) state.stale[STAGES[j].id] = true;
+      delete state.approved[STAGES[j].id];
+    }
+    state.maxReached = Math.min(state.maxReached, fromIndex);
+  }
+
+  els.approveBtn.addEventListener('click', function(){
+    var stage = currentStage();
+    var wasApproved = !!state.approved[stage.id];
+    var finalOutput = els.outputEdit.value.trim();
+
+    if (stage.id === 'missing-information'){
+      var answers = els.missingInfoAnswers.value.trim();
+      finalOutput += '\n\n--- Confirmed Answers ---\n' + (answers || 'No answers confirmed — all items remain Needs Confirmation.');
+    }
+
+    var changed = state.approved[stage.id] !== finalOutput;
+    state.approved[stage.id] = finalOutput;
+    delete state.stale[stage.id];
+
+    if (wasApproved && changed){
+      invalidateDownstream(state.stageIndex);
+    }
+
+    if (state.stageIndex >= state.maxReached){
+      state.maxReached = Math.min(state.stageIndex + 1, STAGES.length - 1);
+      if (state.stageIndex === STAGES.length - 1) state.maxReached = STAGES.length - 1;
+    }
+
+    if (state.stageIndex < STAGES.length - 1){
+      state.stageIndex += 1;
+    }
+    renderStagePanel();
+    updateTracker();
+  });
+
+  els.copyBtn.addEventListener('click', function(){
+    var text = els.outputEdit.value;
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text);
+    } else {
+      els.outputEdit.select();
+      document.execCommand('copy');
+    }
+    var original = els.copyBtn.textContent;
+    els.copyBtn.textContent = 'Copied';
+    setTimeout(function(){ els.copyBtn.textContent = original; }, 1200);
+  });
+
+  els.resetBtn.addEventListener('click', function(){
+    if (!confirm('Reset the entire demonstration, including the follow-up tracker? All stage progress will be cleared.')) return;
+    state.stageIndex = 0;
+    state.maxReached = 0;
+    state.approved = {};
+    els.opportunityNotes.value = '';
+    renderStagePanel();
+    resetTracker();
+  });
+
+  els.presentBtn.addEventListener('click', function(){
+    state.presentation = !state.presentation;
+    document.body.classList.toggle('presentation', state.presentation);
+    els.presentBtn.textContent = state.presentation ? 'Exit Presentation Mode' : 'Presentation Mode';
+    window.onbeforeunload = state.presentation ? function(){ return 'Leave the live demo?'; } : null;
+  });
+
+  els.devInfo.textContent = 'AI calls run through /api/generate; the model and API key are configured server-side (see README.md).';
+
+  // ---------------- Follow-up tracker ----------------
+  var TRACKER_KEY = 'meridianFollowUpDemo_v1';
+  var trackerEls = {
+    locked: document.getElementById('trackerLocked'),
+    body: document.getElementById('trackerBody'),
+    statusBadge: document.getElementById('trackerStatusBadge'),
+    simulatedTag: document.getElementById('trackerSimulatedTag'),
+    sentAt: document.getElementById('trackerSentAt'),
+    dueAt: document.getElementById('trackerDueAt'),
+    followedAt: document.getElementById('trackerFollowedAt'),
+    elapsed: document.getElementById('trackerElapsed'),
+    owner: document.getElementById('trackerOwner'),
+    markSentBtn: document.getElementById('markSentBtn'),
+    markFollowedUpBtn: document.getElementById('markFollowedUpBtn'),
+    loadOverdueBtn: document.getElementById('loadOverdueBtn'),
+    proposalRecap: document.getElementById('trackerProposalRecap'),
+    followUpRecap: document.getElementById('trackerFollowUpRecap')
+  };
+
+  function loadTrackerState(){
+    try {
+      var raw = localStorage.getItem(TRACKER_KEY);
+      return raw ? JSON.parse(raw) : { sentAt:null, dueAt:null, followedUpAt:null, owner:'', simulated:false };
+    } catch(e){
+      return { sentAt:null, dueAt:null, followedUpAt:null, owner:'', simulated:false };
+    }
+  }
+  function saveTrackerState(t){
+    try { localStorage.setItem(TRACKER_KEY, JSON.stringify(t)); } catch(e){ /* private browsing, etc. */ }
+  }
+  function resetTracker(){
+    saveTrackerState({ sentAt:null, dueAt:null, followedUpAt:null, owner:'', simulated:false });
+    updateTracker();
+  }
+  function fmtTime(iso){
+    if (!iso) return '—';
+    var d = new Date(iso);
+    return d.toLocaleString();
+  }
+
+  function updateTracker(){
+    var proposalApproved = !!state.approved['proposal-writer'];
+    trackerEls.locked.style.display = proposalApproved ? 'none' : 'block';
+    trackerEls.body.style.display = proposalApproved ? 'block' : 'none';
+    trackerEls.proposalRecap.textContent = state.approved['proposal-writer'] || '(none yet)';
+    trackerEls.followUpRecap.textContent = state.approved['follow-up'] || '(not generated yet — run and approve Stage 5 above)';
+    if (!proposalApproved) return;
+
+    var t = loadTrackerState();
+    if (t.owner) trackerEls.owner.value = t.owner;
+
+    var now = Date.now();
+    var status = 'not-sent';
+    var label = 'Not Sent';
+    if (t.followedUpAt){
+      status = 'followed-up'; label = 'Followed Up';
+    } else if (t.sentAt){
+      if (t.dueAt && now > new Date(t.dueAt).getTime()){
+        status = 'overdue'; label = 'Overdue';
+      } else {
+        status = 'due'; label = 'Follow-Up Due';
+      }
+    }
+    trackerEls.statusBadge.className = 'status-badge ' + status;
+    trackerEls.statusBadge.textContent = label;
+    trackerEls.simulatedTag.style.display = t.simulated ? 'inline-flex' : 'none';
+
+    trackerEls.sentAt.textContent = fmtTime(t.sentAt);
+    trackerEls.dueAt.textContent = fmtTime(t.dueAt);
+    trackerEls.followedAt.textContent = fmtTime(t.followedUpAt);
+
+    if (t.followedUpAt && t.sentAt){
+      var elapsedHours = (new Date(t.followedUpAt).getTime() - new Date(t.sentAt).getTime()) / 3600000;
+      var met = elapsedHours <= 24;
+      trackerEls.elapsed.textContent = elapsedHours.toFixed(1) + 'h — ' + (met ? 'met 24h target' : 'missed 24h target');
+    } else {
+      trackerEls.elapsed.textContent = '—';
+    }
+
+    trackerEls.markSentBtn.disabled = status !== 'not-sent';
+    trackerEls.markFollowedUpBtn.disabled = !t.sentAt || !!t.followedUpAt;
+  }
+
+  trackerEls.markSentBtn.addEventListener('click', function(){
+    var t = loadTrackerState();
+    var now = Date.now();
+    t.sentAt = new Date(now).toISOString();
+    t.dueAt = new Date(now + 24 * 3600000).toISOString();
+    t.followedUpAt = null;
+    t.simulated = false;
+    t.owner = trackerEls.owner.value.trim();
+    saveTrackerState(t);
+    updateTracker();
+  });
+
+  trackerEls.markFollowedUpBtn.addEventListener('click', function(){
+    var t = loadTrackerState();
+    t.followedUpAt = new Date().toISOString();
+    t.owner = trackerEls.owner.value.trim() || t.owner;
+    saveTrackerState(t);
+    updateTracker();
+  });
+
+  trackerEls.loadOverdueBtn.addEventListener('click', function(){
+    var now = Date.now();
+    var sentAt = now - 30 * 3600000; // 30h ago -> already past the 24h due mark
+    var t = {
+      sentAt: new Date(sentAt).toISOString(),
+      dueAt: new Date(sentAt + 24 * 3600000).toISOString(),
+      followedUpAt: null,
+      owner: trackerEls.owner.value.trim() || 'Demo (simulated)',
+      simulated: true
+    };
+    saveTrackerState(t);
+    updateTracker();
+  });
+
+  trackerEls.owner.addEventListener('change', function(){
+    var t = loadTrackerState();
+    t.owner = trackerEls.owner.value.trim();
+    saveTrackerState(t);
+  });
+
+  window.addEventListener('focus', updateTracker);
+
+  renderStagePanel();
+  updateTracker();
+})();
+</script>

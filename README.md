@@ -251,3 +251,94 @@ resolving).
    `https://<username>.github.io/<repository-name>/`.
 5. Share that URL with the cohort. Opening it works exactly like the local file, plus Save & Get
    Link now works for anyone with the link.
+
+## Meridian AI Proposal Writer (`meridian-proposal-writer.html`)
+
+A separate, dedicated prototype page for the presentation demo — not part of the capstone tool
+above, and does not touch or depend on `index.html` or `meridian-pitch-deck.html`. It walks
+Meridian Consulting Group's five-stage proposal workflow, matching the team's authoritative
+assignment table exactly: **Client Opportunity Summary (Ali) → Missing Information Detector
+(Angelica) → Proposal Outline Builder (Stephanie) → Proposal Writer (Ashley) → Follow-Up Prompt
+(Edwin)**, calling a real AI model through a server-side function so no API key ever reaches the
+browser. An earlier version of this page used Quality/Risk Review and Objection Response instead
+of two of these — that was wrong (they aren't in the team's five-prompt table) and has been
+replaced.
+
+**Prompt status: every stage is currently running a labeled DRAFT PLACEHOLDER prompt**, built from
+each owner's actual assignment brief (`~/Downloads/Meridian_Team_Assignments`, Aug 30 2026) — not
+their tested prompt. As of 2026-09-08 all five assignment files still have an unfilled "[PASTE
+YOUR PROMPT HERE]" field; the in-class peer-review pass that produces the real prompts
+(`Apex-Prompt-Testing-Instructions-Team-Examples.pptx`) had not happened yet. The UI shows a "Draft
+placeholder prompt" badge on every stage as a reminder. Swap each stage's `promptTemplate` in
+`api/generate.js` for the team's final TASK/CONTEXT/REFERENCES/OUTPUT text when it's provided —
+nothing else needs to change. The "Load Apex Manufacturing Demo" button uses the exact canonical
+Apex wording from the team's shared testing instructions (slide 5 of the pptx above), the same
+input every owner/reviewer pair tested against.
+
+The "Use Saved Demo Output" fallback is wired up in the UI but disabled for all five stages —
+no approved saved Apex output exists yet for any of them. Do not enable it with placeholder text;
+wire in the team's real saved outputs when available.
+
+The page also includes a **post-proposal follow-up tracker** below the five-stage workflow: mark
+the current demo proposal sent, see a Not Sent / Follow-Up Due / Overdue / Followed Up status
+against a 24-hour target, and mark the first follow-up sent to see elapsed time. It's local-browser
+demo state only (`localStorage`), never sends anything, and only updates on open/refresh. Scope
+note: the course brief describes leads waiting 5+ days for follow-up in general, not specifically
+after a proposal — this tracker is scoped to post-proposal only; confirm that's the intended scope
+before presenting.
+
+### Architecture
+
+- `meridian-proposal-writer.html` — static page (vanilla JS/CSS, no build step, no framework),
+  matching this repo's existing pattern.
+- `api/generate.js` — a zero-config Vercel Node serverless function (CommonJS, no dependencies).
+  Receives `{ stage, context }`, assembles the stage's prompt server-side, calls the Anthropic
+  Messages API directly via `fetch`, and returns `{ output }`. Only the fields a given stage
+  actually needs are sent — e.g. the Outline stage only receives the approved Stage 1 summary plus
+  the missing-information review, not the raw notes or any other stage's output. Also enforces a
+  6,000-character-per-field input cap, a 20-requests/hour-per-IP rate limit, and a 150-request/day
+  hard cap across all users (in-memory, best-effort on serverless — pair with Vercel deployment
+  protection for anything longer-lived than a presentation window) per André's standing rule that
+  any public app calling a paid API needs a spend cap and rate limit set up first.
+
+### Environment variables (set in the Vercel project, not committed anywhere)
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Yes | Server-side only. Never sent to the client. |
+| `ANTHROPIC_MODEL` | No | Defaults to `claude-sonnet-5` if unset. |
+| `REQUEST_TIMEOUT_MS` | No | Defaults to `30000`. |
+
+### Local setup
+
+This repo has no build step, but the API route needs Vercel's dev server to run locally (a plain
+static file server won't execute `api/generate.js`):
+
+```bash
+npm i -g vercel        # one-time
+vercel dev              # serves the page + /api/generate on localhost
+```
+
+Set `ANTHROPIC_API_KEY` (and optionally `ANTHROPIC_MODEL`) in a local `.env` file or via
+`vercel env pull` before running `vercel dev`. Never commit `.env`.
+
+### Deployment
+
+Same Vercel project as the rest of this repo (`ai-connect-consulting` / `capstone-preview-generator`,
+already linked via `.vercel/`). Pushing to `main` deploys both the existing static pages and the
+new `api/generate.js` function automatically — no separate configuration needed. Set the
+environment variables above in the Vercel project dashboard (Settings → Environment Variables)
+before the first deploy that needs live AI calls.
+
+### Presentation-demo checklist
+
+- [ ] `ANTHROPIC_API_KEY` set in Vercel for the environment you're presenting from
+- [ ] Get the team's five final, peer-reviewed prompts and swap them into `api/generate.js`
+- [ ] Confirm each stage's prompt is no longer a draft placeholder (badge should read "Approved
+      prompt", not "Draft placeholder prompt") — do not present with placeholder prompts
+- [ ] Confirm saved fallback output exists and is enabled for all five stages, in case of a live
+      API/network failure while presenting
+- [ ] Click "Load Apex Manufacturing Demo", run all five stages once end-to-end as a rehearsal,
+      including entering a missing-information answer and running the follow-up tracker
+- [ ] Test Reset Demo between rehearsal and the live run
+- [ ] Turn on Presentation Mode before presenting
