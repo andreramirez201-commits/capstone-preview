@@ -179,10 +179,6 @@
   .pcards.three .pcard .out{ font-size:0.82rem; }
   .pcard .out b{ display:block; font-family:"IBM Plex Mono", monospace; font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-soft); font-weight:500; margin:10px 0 3px; }
   .pcard .out b:first-child{ margin-top:0; }
-  .pcard-icon{ margin:2px 0 4px; }
-  .pcard-icon svg{ width:38px; height:38px; display:block; }
-  .paper .pcard-icon{ color:var(--accent); }
-  .dark .pcard-icon{ color:var(--dark-accent); }
   .pcard.pending{ opacity:0.82; }
   .pcard .pendingtag{ font-family:"IBM Plex Mono", monospace; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent-2); background:var(--accent-2-soft); padding:3px 8px; border-radius:4px; display:inline-block; margin-bottom:10px; }
 
@@ -293,40 +289,17 @@
       <div class="pcard">
         <span class="tag">1</span>
         <h4>A Workflow Guide</h4>
-        <div class="pcard-icon" aria-hidden="true">
-          <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M11 5h12l6 6v23a1 1 0 0 1-1 1H11a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/>
-            <path d="M23 5v6h6"/>
-            <path d="M14.5 21.5l2.5 2.5 5-6"/>
-            <path d="M14 28h10"/>
-          </svg>
-        </div>
+        <div class="out">Explains which prompt to use, what information to provide, and what to review before moving forward.</div>
       </div>
       <div class="pcard">
         <span class="tag">2</span>
         <h4>Five Connected Prompts</h4>
-        <div class="pcard-icon" aria-hidden="true">
-          <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-            <line x1="5" y1="20" x2="35" y2="20"/>
-            <circle cx="5" cy="20" r="2.8" fill="currentColor" stroke="none"/>
-            <circle cx="12.5" cy="20" r="2.8" fill="currentColor" stroke="none"/>
-            <circle cx="20" cy="20" r="2.8" fill="currentColor" stroke="none"/>
-            <circle cx="27.5" cy="20" r="2.8" fill="currentColor" stroke="none"/>
-            <circle cx="35" cy="20" r="2.8" fill="currentColor" stroke="none"/>
-          </svg>
-        </div>
+        <div class="out">Guide the salesperson from client notes to a proposal and follow-up. Each stage builds on the reviewed output from the previous stage.</div>
       </div>
       <div class="pcard">
         <span class="tag">3</span>
-        <h4>An Interactive Demo</h4>
-        <div class="pcard-icon" aria-hidden="true">
-          <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="5" y="7" width="30" height="20" rx="2.5"/>
-            <line x1="15" y1="32" x2="25" y2="32"/>
-            <line x1="20" y1="27" x2="20" y2="32"/>
-            <path d="M17 13.5l8 3.5-8 3.5v-7z" fill="currentColor" stroke="none"/>
-          </svg>
-        </div>
+        <h4>Interactive Proposal Writer</h4>
+        <div class="out">Shows how the five prompts work together using the Apex Manufacturing example.</div>
       </div>
     </div>
     <p class="statement" style="font-size:clamp(1.3rem,2.6vw,2rem); margin-top:28px; max-width:none;">The salesperson stays in control.</p>
