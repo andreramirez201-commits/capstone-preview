@@ -168,6 +168,8 @@
   .pcard{ border-radius:10px; padding:22px 24px; }
   .pcards.three .pcard{ padding:16px 18px; }
   .paper .pcard{ background:var(--paper-raised); border:1px solid var(--line-soft); }
+  .dark .pcard{ background:var(--dark-bg-raised); border:1px solid var(--dark-line); }
+  .dark .pcard .tag{ background:var(--dark-accent-soft); color:var(--dark-accent); }
   .pcard .tag{ font-family:"IBM Plex Mono", monospace; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); background:var(--accent-soft); padding:3px 8px; border-radius:4px; display:inline-block; margin-bottom:10px; }
   .pcard h4{ font-family:"Fraunces", Georgia, serif; font-size:1.1rem; margin:0 0 10px; }
   .pcards.three .pcard h4{ font-size:0.95rem; }
@@ -282,18 +284,25 @@
   <!-- 3: Solution -->
   <section class="slide dark" data-title="Our AI Solution">
     <div class="eyebrow">02 &mdash; Our AI Solution</div>
-    <h1>Five reusable prompts. One guided workflow.</h1>
-    <p class="lede">Three things come out of this project: a guided demo that proves the workflow end to end, a reusable five-prompt library, and a written operating guide. Reps run the five prompts in whatever AI tool Meridian already licenses &mdash; the demo is how we tested and are presenting the workflow, not the thing reps use day to day. Every output is a draft; a rep reviews, edits, and is the one who sends.</p>
-    <div class="cols" style="grid-template-columns:1fr;">
-      <div class="col pro">
-        <h3>What Meridian Gets</h3>
-        <ul>
-          <li>No new software or IT purchase &mdash; reps run it in the AI tool Meridian already licenses</li>
-          <li>Reps keep full control of tone, edits, and the send decision</li>
-          <li>Three ready-to-use deliverables: a working demo, the prompt library, and an operating guide</li>
-        </ul>
+    <h1>A Prompt Library, Not Custom Software</h1>
+    <div class="pcards three" style="margin-top:8px;">
+      <div class="pcard">
+        <span class="tag">1</span>
+        <h4>Five Connected Prompts</h4>
+        <div class="out">Guide the salesperson from client notes to a proposal and follow-up. Each stage builds on the reviewed output from the previous stage.</div>
+      </div>
+      <div class="pcard">
+        <span class="tag">2</span>
+        <h4>An Interactive Demo</h4>
+        <div class="out">Shows how the five prompts work together using the Apex Manufacturing example.</div>
+      </div>
+      <div class="pcard">
+        <span class="tag">3</span>
+        <h4>A Workflow Guide</h4>
+        <div class="out">Explains which prompt to use, what information to provide, and what to review before moving forward.</div>
       </div>
     </div>
+    <p class="statement" style="font-size:clamp(1.3rem,2.6vw,2rem); margin-top:28px; max-width:none;">The salesperson stays in control.</p>
     <div class="footer-tag">AI Connect Consulting &middot; Team 4</div>
   </section>
 
